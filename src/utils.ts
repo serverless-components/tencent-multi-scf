@@ -19,10 +19,32 @@ export const capitalString = (str: string) => {
   return `${str[0].toUpperCase()}${str.slice(1)}`;
 };
 
-export const removeAppid = (str: string, appid: string) => {
+export const removeAppId = (str: string, appid: string) => {
   const suffix = `-${appid}`;
   if (!str || str.indexOf(suffix) === -1) {
     return str;
   }
   return str.slice(0, -suffix.length);
+};
+
+export const mergeArray = <T>(
+  arr1: { [key: string]: any }[],
+  arr2: { [key: string]: any }[],
+  compareKey: string,
+): T[] => {
+  for (const newItem of arr1) {
+    let existIndex = -1;
+    arr2.some((item, index) => {
+      if (item[compareKey] === newItem[compareKey]) {
+        existIndex = index;
+      }
+    });
+    if (existIndex === -1) {
+      arr2.push(newItem);
+    } else {
+      arr2[existIndex] = newItem;
+    }
+  }
+
+  return arr2 as T[];
 };

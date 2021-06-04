@@ -1,7 +1,7 @@
 app: multi-scf
 stage: dev
 
-component: multi-scf
+component: multi-scf@dev
 name: demo
 
 inputs:
@@ -14,16 +14,17 @@ inputs:
   memorySize: 128
   timeout: 3
   functions:
-    - name: index
+    index:
       handler: app.index
-    - name: userList
+      name: index
+    userList:
       handler: app.userList
+      name: userList
       memorySize: 256
       timeout: 10
   triggers:
     - type: timer
-      function:
-        name: index
+      function: index
       parameters:
         name: timer1
         cronExpression: '*/5 * * * * * *' # 每5秒触发一次
@@ -40,9 +41,7 @@ inputs:
           - path: /
             method: GET
             # api 的 function 配置优先级高于外层 function
-            function:
-              name: index
+            function: index
           - path: /
             method: POST
-            function:
-              name: userList
+            function: userList

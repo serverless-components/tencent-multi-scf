@@ -3,6 +3,7 @@ const CONFIGS = {
   description: 'Created by Serverless',
   type: 'event',
   compName: 'multi-scf',
+  namespace: 'default',
   runtime: 'Nodejs12.16',
 
   cos: {

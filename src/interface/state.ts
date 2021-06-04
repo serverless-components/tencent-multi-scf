@@ -11,5 +11,5 @@ export type State = {
   region: string;
   functions: ScfOutput[];
 
-  triggers?: { name: string; triggers: TriggerOutput[] }[];
+  triggers?: TriggerOutput[];
 };

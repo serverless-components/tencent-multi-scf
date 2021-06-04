@@ -1,4 +1,4 @@
-export interface TriggerOutput {
+export interface TriggerDetail {
   serviceId?: string;
   serviceName?: string;
 
@@ -15,12 +15,17 @@ export interface ScfOutput {
   type: string;
   description?: string;
 
-  triggers?: TriggerOutput[];
-  Triggers?: TriggerOutput[];
+  triggers?: TriggerDetail[];
+  Triggers?: TriggerDetail[];
+}
+
+export interface TriggerOutput {
+  name: string;
+  triggers: TriggerDetail[];
 }
 
 export interface Outputs {
   region: string;
   functions: ScfOutput[];
-  triggers?: { name: string; triggers: TriggerOutput[] }[];
+  triggers?: TriggerOutput[];
 }

@@ -1,5 +1,5 @@
 import { Component } from '@serverless/core';
-import { Inputs, TriggerInputs, FaasInputs } from './inputs';
+import { Inputs, TriggerInputs, FaasInputs, TriggerSdkInputs } from './inputs';
 import { State } from './state';
 
 export * from './inputs';
@@ -17,7 +17,13 @@ export type ComponentInstance = Component<State>;
 export interface FormatTriggerOptions {
   triggers?: TriggerInputs[];
   instance: ComponentInstance;
-  functionName?: string;
+  functionNameMap: { [key: string]: string };
+  commandFunctionKey?: string;
+
+  function: {
+    namespace?: string;
+    qualifier?: string;
+  };
 }
 
 export interface FormatOptions {
@@ -26,11 +32,11 @@ export interface FormatOptions {
   appId: string;
   instance: ComponentInstance;
 
-  functionName?: string;
+  commandFunctionKey?: string;
 }
 
 export interface FormatOutputs {
   region: string;
   scfInputsList: FaasInputs[];
-  triggerInputsList: TriggerInputs[];
+  triggerInputsList: TriggerSdkInputs[];
 }

@@ -5,6 +5,7 @@ import {
   SrcObject,
   FaasInputs,
   TriggerInputs,
+  TriggerSdkInputs,
   FormatOptions,
   FormatOutputs,
   FormatTriggerOptions,
@@ -13,30 +14,14 @@ import {
 } from './interface';
 import { CONFIGS } from './config';
 import { ApiError } from 'tencent-component-toolkit/lib/utils/error';
-
-export const generateId = (): string =>
-  Math.random()
-    .toString(36)
-    .substring(6);
-
-export const getType = (obj: any): string => {
-  return Object.prototype.toString.call(obj).slice(8, -1);
-};
-
-export const removeAppid = (str: string, appid: string): string => {
-  const suffix = `-${appid}`;
-  if (!str || str.indexOf(suffix) === -1) {
-    return str;
-  }
-  return str.slice(0, -suffix.length);
-};
+import { randomId, getType, removeAppId } from './utils';
 
 function getDefaultBucketName(region: string) {
   return `sls-cloudfunction-${region}-code`;
 }
 
 function getDefultObjectName(compName: string) {
-  return `/${compName}_${generateId()}-${Math.floor(Date.now() / 1000)}.zip`;
+  return `/${compName}_${randomId()}-${Math.floor(Date.now() / 1000)}.zip`;
 }
 
 async function uploadCodeToCos({
@@ -62,7 +47,7 @@ async function uploadCodeToCos({
 
   // 如果没配置 bucket，使用默认 bucket，默认名称复用老的逻辑
   const bucketName = tempSrc!.bucket
-    ? removeAppid(tempSrc.bucket, appId)
+    ? removeAppId(tempSrc.bucket, appId)
     : getDefaultBucketName(region);
 
   const objectName = tempSrc.object || getDefultObjectName(CONFIGS.compName);
@@ -103,13 +88,12 @@ function getApigwState(name: string, instance: ComponentInstance): ApigwState {
     return {} as ApigwState;
   }
   let apigwState = {} as ApigwState;
-  LoopA: for (let i = 0; i < triggersList.length; i++) {
-    const { triggers } = triggersList[i];
-    for (let j = 0; j < triggers.length; j++) {
-      const curT = triggers[j];
+  loopA: for (const item of triggersList) {
+    const { triggers } = item;
+    for (const curT of triggers) {
       if (curT.serviceId && curT.serviceName === name) {
         apigwState = curT as ApigwState;
-        break LoopA;
+        break loopA;
       }
     }
   }
@@ -117,24 +101,32 @@ function getApigwState(name: string, instance: ComponentInstance): ApigwState {
   return apigwState;
 }
 
-function formatScfName({ instance, name }: { instance: ComponentInstance; name: string }) {
-  return `${name}-${instance.name}-${instance.stage}-${instance.app}`;
+function formatScfName({
+  instance,
+  functionKey,
+}: {
+  instance: ComponentInstance;
+  functionKey: string;
+}) {
+  return `${functionKey}-${instance.name}-${instance.stage}-${instance.app}`;
 }
 
 // 格式化触发器参数
 export function formatTriggerInputs({
   triggers = [],
   instance,
-  functionName,
-}: FormatTriggerOptions): TriggerInputs[] {
+  commandFunctionKey,
+  functionNameMap,
+  function: { namespace = 'default' },
+}: FormatTriggerOptions): TriggerSdkInputs[] {
   // 格式化触发器参数，输入底层依赖 SDK
   const triggersInputsList: TriggerInputs[] = [];
   triggers.forEach((item: TriggerInputs) => {
-    let isNeeded = functionName ? false : true;
+    item.namespace = namespace;
+    let isNeeded = commandFunctionKey ? false : true;
     if (item.type === 'apigw') {
       const serviceName = item.parameters.name;
       const apigwState = getApigwState(serviceName, instance);
-      console.log('apigwState', apigwState);
 
       item.parameters.serviceId = item.parameters.id || apigwState.serviceId;
       item.parameters.serviceName = serviceName;
@@ -142,31 +134,32 @@ export function formatTriggerInputs({
       // 定制化需求：是否在 yaml 文件中配置了 apigw 触发器的 serviceId
       item.parameters.isInputServiceId = !!item.parameters.id;
 
-      item.parameters.endpoints = item.parameters.apis?.filter((api) => {
-        const { name } = api.function;
-        api.function.name = formatScfName({ instance, name });
-        api.function.functionName = formatScfName({ instance, name });
-        api.function.functionNamespace = api.function.namespace;
-        api.function.functionQualifier = api.function.qualifier;
+      const apiList = item.parameters.apis?.filter((api) => {
+        const functionKey = api.function as string;
+        api.function = {
+          name: functionNameMap[functionKey],
+          functionName: functionNameMap[functionKey],
+          functionNamespace: namespace,
+          functionQualifier: item.parameters.qualifier,
+        };
 
-        if (functionName) {
-          if (functionName === name) {
+        if (commandFunctionKey) {
+          if (commandFunctionKey === functionKey) {
             isNeeded = true;
             return true;
           }
-
-          isNeeded = false;
           return false;
         }
         isNeeded = true;
         return true;
       });
 
+      item.parameters.endpoints = apiList;
       item.parameters.oldState = apigwState;
     } else {
-      const { name } = item.function!;
-      if (functionName) {
-        if (functionName === name) {
+      const functionKey = item.function as string;
+      if (commandFunctionKey) {
+        if (commandFunctionKey === functionKey) {
           isNeeded = true;
         } else {
           isNeeded = false;
@@ -174,16 +167,47 @@ export function formatTriggerInputs({
       } else {
         isNeeded = true;
       }
-      item.function!.name = formatScfName({ instance, name: item.function!.name });
+      item.function = {
+        name: functionNameMap[functionKey],
+      };
     }
-
-    item.parameters.qualifier = item.function?.qualifier;
 
     if (isNeeded) {
       triggersInputsList.push(item);
     }
   });
-  return triggersInputsList;
+  return triggersInputsList as TriggerSdkInputs[];
+}
+
+export function formatFaasInputs({
+  inputs,
+}: {
+  instance?: ComponentInstance;
+  inputs: FaasInputs;
+}): FaasInputs {
+  const { environment = [], tags = [] } = inputs;
+  if (environment instanceof Array) {
+    const newEnvs: { [key: string]: string } = {};
+    environment.forEach(({ key, value }) => {
+      newEnvs[key] = value;
+    });
+    inputs.environment = {
+      variables: newEnvs,
+    };
+  }
+  if (tags instanceof Array) {
+    const newTags: Record<string, string> = {};
+    tags.forEach(({ key, value }) => {
+      newTags[key] = value;
+    });
+
+    inputs.tags = newTags;
+  }
+  if (inputs.vpc) {
+    inputs.vpcConfig = inputs.vpc;
+  }
+
+  return inputs;
 }
 
 // 格式化云函数参数
@@ -192,12 +216,13 @@ export const formatInputs = async ({
   credentials,
   appId,
   instance,
-  functionName,
+  commandFunctionKey,
 }: FormatOptions): Promise<FormatOutputs> => {
   const region = inputs.region || CONFIGS.region;
   const { code } = await uploadCodeToCos({ credentials, appId, inputs });
 
   const commonInputs = {
+    namespace: inputs.namespace || CONFIGS.namespace,
     runtime: inputs.runtime || CONFIGS.runtime,
     description: inputs.description || CONFIGS.description,
     code,
@@ -207,40 +232,45 @@ export const formatInputs = async ({
   const { functions } = inputs;
 
   let isFunctionExist = false;
-  functions.forEach((func: FaasInputs) => {
+
+  const functionNameMap: { [key: string]: string } = {};
+  Object.entries(functions).forEach(([key, func]) => {
     const scfInputs = {
       ...commonInputs,
       ...func,
     };
 
-    console.log('scfInputs', JSON.stringify(scfInputs));
-    const formatedName = formatScfName({ instance, name: scfInputs.name });
+    const formatedName = formatScfName({ instance, functionKey: key });
     // 如果指定了函数名称，则过滤
-    if (functionName) {
-      if (scfInputs.name === functionName) {
-        scfInputs.name = formatedName;
+    if (commandFunctionKey) {
+      if (key === commandFunctionKey) {
+        scfInputs.name = scfInputs.name || formatedName;
         scfInputsList.push(scfInputs);
         isFunctionExist = true;
-      } else {
       }
     } else {
-      scfInputs.name = formatedName;
+      scfInputs.name = scfInputs.name || formatedName;
       scfInputsList.push(scfInputs);
     }
+    functionNameMap[key] = scfInputs.name;
   });
 
   // 如果指定了函数，但是没法找到，就报错
-  if (functionName && !isFunctionExist) {
+  if (commandFunctionKey && !isFunctionExist) {
     throw new ApiError({
       type: 'MULTI-SCF_PARAMETERS_ERROR',
-      message: `指定函数名称(${functionName})不存在`,
+      message: `指定函数别名(${commandFunctionKey})不存在`,
     });
   }
 
   const triggerInputsList = formatTriggerInputs({
     triggers: inputs.triggers,
     instance,
-    functionName,
+    commandFunctionKey,
+    functionNameMap,
+    function: {
+      namespace: inputs.namespace,
+    },
   });
 
   return {

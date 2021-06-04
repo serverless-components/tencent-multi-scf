@@ -17,9 +17,37 @@ const credentials = {
   },
 };
 
-async function deploy(options: { [propName: string]: any }) {
-  const spinner = ora().start(`Start deploying example...\n`);
+function parseInputs(inputs: string) {
+  const inputObject: { [key: string]: any } = {};
+  if (!inputs) {
+    return inputObject;
+  }
+  try {
+    inputs.split(',').forEach((item) => {
+      const [key, value] = item.split('=');
+      if (key.indexOf('.') !== -1) {
+        const keyArr = key.split('.');
+        const len = keyArr.length;
+        let index = 0;
+        let curObj = inputObject;
 
+        while (index < len) {
+          const curKey = keyArr[index];
+          if (!curObj[curKey]) {
+            curObj[curKey] = index === len - 1 ? value : {};
+          }
+          curObj = curObj[curKey];
+          index++;
+        }
+      } else {
+        inputObject[key] = value;
+      }
+    });
+  } catch (e) {}
+  return inputObject;
+}
+
+async function deploy(options: { [propName: string]: any }) {
   const { examplePath, yamlConfig } = getExampleConfig();
   const appId = process.env.TENCENT_APP_ID as string;
 
@@ -49,6 +77,15 @@ async function deploy(options: { [propName: string]: any }) {
     yamlConfig.component = `${COMPONENT_NAME}@dev`;
   }
 
+  // merge customize inputs parameters
+  const inputs = parseInputs(options.inputs);
+  yamlConfig.inputs = {
+    ...yamlConfig.inputs,
+    ...inputs,
+  };
+
+  const spinner = ora().start(`Start deploying example...\n`);
+
   // remove deploy instance
   if (options.remove) {
     spinner.info(`Removing example (${stage})...`);
@@ -77,6 +114,7 @@ async function run() {
     .option('-d, --dev [dev]', 'use dev version component')
     .option('-t, --template [template]', 'use template to deploy')
     .option('-r, --remove [remove]', 'remove example')
+    .option('-i, --inputs [inputs]', 'customize inputs')
     .action((options) => {
       deploy(options);
     });

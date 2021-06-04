@@ -11,9 +11,6 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 2018,
     sourceType: 'module',
-    ecmaFeatures: {
-      jsx: true,
-    },
   },
   globals: {
     on: true, // for the Socket file
@@ -68,6 +65,7 @@ module.exports = {
     strict: ['error', 'global'],
     'prettier/prettier': 'error',
     "@typescript-eslint/no-unused-vars": ["error", { "args": "none" }],
-    "@typescript-eslint/no-var-requires": 'off'
+    "@typescript-eslint/no-var-requires": 'off',
+    "@typescript-eslint/no-explicit-any": 'off'
   },
 };

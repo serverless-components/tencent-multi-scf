@@ -44,6 +44,9 @@ export function getComponentConfig(version: string): ComponentConfig {
       remove: {
         definition: 'Remove',
       },
+      get_state: {
+        definition: 'Get instance state',
+      },
     },
   };
 }
