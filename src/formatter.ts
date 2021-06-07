@@ -108,7 +108,7 @@ function formatScfName({
   instance: ComponentInstance;
   functionKey: string;
 }) {
-  return `${functionKey}-${instance.name}-${instance.stage}-${instance.app}`;
+  return `${instance.name}-${instance.stage}-${instance.app}-${functionKey}`;
 }
 
 // 格式化触发器参数

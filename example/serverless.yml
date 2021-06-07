@@ -16,10 +16,8 @@ inputs:
   functions:
     index:
       handler: app.index
-      name: index
     userList:
       handler: app.userList
-      name: userList
       memorySize: 256
       timeout: 10
   triggers:
