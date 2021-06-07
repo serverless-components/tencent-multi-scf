@@ -21,10 +21,12 @@ async function buildProject() {
 }
 
 async function deploy(options: { [propName: string]: any }) {
-  const stage = options.env || 'dev';
-  process.env.SERVERLESS_PLATFORM_STAGE = stage;
+  const env = options.env || 'dev';
+  process.env.SERVERLESS_PLATFORM_STAGE = env;
 
-  const spinner = ora().start('Start deploying...\n');
+  const spinner = ora().start(`Deploying`);
+
+  spinner.info(`Start deploying (${env})...`);
 
   spinner.info(`[BUILD] Building project...`);
   await buildProject();
