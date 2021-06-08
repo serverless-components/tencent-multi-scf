@@ -1,6 +1,6 @@
-## 腾讯云工作流组件
+## 腾讯云多函数管理流组件
 
-腾讯云工作流组件，方便用户快速创建、删除工作流。
+腾讯云多函数管理，方便用户管理多云函数应用。
 
 ## 快速开始
 
@@ -27,21 +27,42 @@ $ npm install -g serverless
 以下是 `multi-scf` 组件的 `serverless.yml` 配置示例：
 
 ```yml
-app: appDemo
+app: multi-scf
 stage: dev
 
 component: multi-scf
-name: multi-scf-demo
+name: demo
 
 inputs:
-  src: ./
+  src:
+    src: ./
+    exclude:
+      - .env
   region: ap-guangzhou
-  name: multi-scf-demo
-  definition: ./workflow.json
-  chineseName: chineseName
-  description: Created By Serverless
-  input: '{"key":"value"}'
-  role: multi-scf-role # 请确保角色已经存在
+  runtime: Nodejs12.16
+  memorySize: 128
+  timeout: 3
+  functions:
+    index:
+      handler: app.index
+    userList:
+      handler: app.userList
+      memorySize: 256
+      timeout: 10
+  triggers:
+    - type: apigw
+      parameters:
+        name: serverless
+        protocols:
+          - https
+          - http
+        apis:
+          - path: /
+            method: GET
+            function: index
+          - path: /
+            method: POST
+            function: userList
 ```
 
 点此查看[全量配置及配置说明](./docs/configure.md)

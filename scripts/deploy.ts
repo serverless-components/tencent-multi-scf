@@ -27,7 +27,6 @@ async function deploy(options: { [propName: string]: any }) {
   const spinner = ora().start(`Deploying`);
 
   spinner.info(`Start deploying (${env})...`);
-
   spinner.info(`[BUILD] Building project...`);
   await buildProject();
   spinner.succeed(`[BUILD] Build project success`);
