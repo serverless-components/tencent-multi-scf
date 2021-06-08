@@ -65,19 +65,19 @@ export interface FaasBaseConfig {
   // 固定 IP
   eip?: boolean;
   // 是否开启公网访问
-  publicAccess: boolean;
+  publicAccess?: boolean;
   // 在线安装依赖
-  installDependency: boolean;
+  installDependency?: boolean;
   // 是否忽略触发器部署
-  ignoreTriggers: boolean;
+  ignoreTriggers?: boolean;
   // 启用异步执行（长时间运行）
-  asyncRunEnable: boolean;
+  asyncRunEnable?: boolean;
   // 是否启用状态追踪，如果要配置为 `true`，必须配置 `asyncRunEnable` 同时为 `true`
-  traceEnable: boolean;
+  traceEnable?: boolean;
 }
 
 export interface FaasInputs extends FaasBaseConfig {
-  name: string;
+  name?: string;
   handler: string;
 }
 
@@ -140,7 +140,7 @@ export interface CommandOptions {
 
 export interface Inputs extends FaasBaseConfig {
   region?: string;
-  src?: string;
+  src?: string | SrcObject;
   type?: string;
 
   functions: Record<string, FaasInputs>;

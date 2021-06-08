@@ -4,7 +4,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "description": "Tencent Cloud Serverless Component of Web Frameworks",
+  "description": "Tencent Cloud Serverless Component of Multiple SCF",
   "scripts": {
     "bootstrap": "ts-node ./scripts/bootstrap.ts",
     "test": "jest",
@@ -87,7 +87,9 @@
     "example": "examples"
   },
   "keywords": [
-    "framework",
+    "scf",
+    "multiple",
+    "function",
     "serverless",
     "serverless-framework",
     "serverless-components",
@@ -96,10 +98,10 @@
   "version": "1.0.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/serverless-components/tencent-http.git"
+    "url": "git+https://github.com/serverless-components/tencent-multi-scf.git"
   },
   "bugs": {
-    "url": "https://github.com/serverless-components/tencent-http/issues"
+    "url": "https://github.com/serverless-components/tencent-multi-scf/issues"
   },
-  "homepage": "https://github.com/serverless-components/tencent-http#readme"
+  "homepage": "https://github.com/serverless-components/tencent-multi-scf#readme"
 }

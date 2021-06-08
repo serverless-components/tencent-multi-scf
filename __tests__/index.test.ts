@@ -14,12 +14,50 @@ interface YamlConfig {
 const inputs = {
   src: join(__dirname, '..', 'example'),
   region: 'ap-guangzhou',
-  name: 'serverless-test',
-  definition: './workflow.json',
-  chineseName: 'chineseName',
-  description: 'Created By Serverless',
-  role: 'serverless-test-aws',
-  input: '{"key":"value"}',
+  runtime: 'Nodejs12.16',
+  memorySize: 128,
+  timeout: 3,
+  functions: {
+    index: {
+      handler: 'app.index',
+    },
+    userList: {
+      handler: 'app.userList',
+      memorySize: 256,
+      timeout: 10,
+    },
+  },
+  triggers: [
+    {
+      type: 'timer',
+      function: 'index',
+      parameters: {
+        name: 'timer1',
+        cronExpression: '*/5 * * * * * *',
+        enable: true,
+        argument: 'argument',
+      },
+    },
+    {
+      type: 'apigw',
+      parameters: {
+        name: 'serverless',
+        protocols: ['https', 'http'],
+        apis: [
+          {
+            path: '/',
+            method: 'GET',
+            function: 'index',
+          },
+          {
+            path: '/',
+            method: 'POST',
+            function: 'userList',
+          },
+        ],
+      },
+    },
+  ],
 };
 
 const instanceYaml: YamlConfig = {
@@ -45,19 +83,12 @@ describe('multi-scf', () => {
     const instance = await sdk.deploy(instanceYaml, credentials);
 
     expect(instance).toBeDefined();
-    expect(instance.instanceName).toEqual(instanceYaml.name);
-    expect(instance.outputs.region).toEqual('ap-guangzhou');
-    expect(instance.outputs.roleName).toEqual('serverless-test-aws');
   });
 
   it('update source code', async () => {
-    inputs.chineseName = 'updateChineseName';
     const instance = await sdk.deploy(instanceYaml, credentials);
 
     expect(instance).toBeDefined();
-    expect(instance.instanceName).toEqual(instanceYaml.name);
-    expect(instance.outputs.region).toEqual('ap-guangzhou');
-    expect(instance.outputs.roleName).toEqual('serverless-test-aws');
   });
 
   it('remove', async () => {
