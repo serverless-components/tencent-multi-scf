@@ -18,7 +18,7 @@ export function getComponentConfig(version: string): ComponentConfig {
     version,
     author: 'Tencent Cloud, Inc.',
     org: 'Tencent Cloud, Inc.',
-    description: `Deploy ${COMPONENT_NAME} onto Tencent.`,
+    description: `Manage multiple SCF on Tencent.`,
     keywords: `tencent, serverless, multi-scf, scf`,
     repo: `https://github.com/serverless-components/tencent-${COMPONENT_NAME}`,
     readme: `https://github.com/serverless-components/tencent-${COMPONENT_NAME}/tree/master/README.md`,
