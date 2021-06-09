@@ -68,7 +68,7 @@ async function uploadCodeToCos({
     console.log(`Uploading code ${objectName} to bucket ${bucket}`);
     await cos.upload({
       bucket,
-      file: inputs.src,
+      file: inputs.src as string,
       key: objectName,
     });
   }
@@ -252,7 +252,7 @@ export const formatInputs = async ({
       scfInputs.name = scfInputs.name || formatedName;
       scfInputsList.push(scfInputs);
     }
-    functionNameMap[key] = scfInputs.name;
+    functionNameMap[key] = scfInputs.name!;
   });
 
   // 如果指定了函数，但是没法找到，就报错

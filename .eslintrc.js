@@ -64,8 +64,8 @@ module.exports = {
     'spaced-comment': 'error',
     strict: ['error', 'global'],
     'prettier/prettier': 'error',
-    "@typescript-eslint/no-unused-vars": ["error", { "args": "none" }],
-    "@typescript-eslint/no-var-requires": 'off',
-    "@typescript-eslint/no-explicit-any": 'off'
+    '@typescript-eslint/no-unused-vars': ['error', { args: 'none' }],
+    '@typescript-eslint/no-var-requires': 'off',
+    '@typescript-eslint/no-explicit-any': 'off',
   },
 };
