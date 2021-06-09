@@ -1,7 +1,7 @@
 app: multi-scf
 stage: dev
 
-component: multi-scf@dev
+component: multi-scf
 name: demo
 
 inputs:

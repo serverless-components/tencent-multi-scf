@@ -5,10 +5,10 @@
 ```yml
 # serverless.yml
 
-app: appDemo
+app: multi-scf
 stage: dev
+name: demo
 component: multi-scf
-name: multi-scf-demo
 
 inputs:
   src:
@@ -131,13 +131,34 @@ functions:
     # ...
 ```
 
+部署后的函数名称默认会基于配置的唯一 `Key`，进行规范化拼接，规则为：``${name}-${stage}-${app}-${Key}`，比如下面配置生成的函数名称为`demo-dev-multi-scf-index`：
+
+```yaml
+app: multi-scf
+stage: dev
+name: demo
+component: multi-scf
+functions:
+  index:
+    handler: app.index
+```
+
+如果想要自定义函数名称，直接配置`name` 属性就好，比如：
+
+```yaml
+functions:
+  index: # 唯一 Key
+    name: indexFunc
+    handler: app.index
+```
+
 函数配置为应用中唯一 `Key` 作为属性，然后 `Key` 属性值为 `Function` 对象，
 
 `Function` 对象支持配置属性如下：
 
 | 参数名称          | 必选 | 类型                        | 默认值  | 描述                                                                                                      |
 | ----------------- | ---- | --------------------------- | ------- | --------------------------------------------------------------------------------------------------------- |
-| name              | 是   | string                      |         | 应用中函数唯一性标识，会组装成函数名称                                                                    |
+| name              | 否   | string                      |         | 函数名称                                                                                                  |
 | handler           | 是   | string                      |         | 处理方法名称                                                                                              |
 | role              | 否   | string                      |         | 运行角色。                                                                                                |
 | description       | 否   | string                      |         | 描述                                                                                                      |
