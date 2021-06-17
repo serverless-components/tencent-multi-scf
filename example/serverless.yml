@@ -16,10 +16,12 @@ inputs:
   functions:
     index:
       handler: app.index
-    userList:
-      handler: app.userList
+    user-list:
+      handler: app.list
       memorySize: 256
       timeout: 10
+    user-create:
+      handler: app.detail
   triggers:
     - type: timer
       function: index
@@ -40,6 +42,9 @@ inputs:
             method: GET
             # api 的 function 配置优先级高于外层 function
             function: index
-          - path: /
+          - path: /user
+            method: GET
+            function: user-list
+          - path: /user
             method: POST
-            function: userList
+            function: user-create

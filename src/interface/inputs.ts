@@ -78,6 +78,11 @@ export interface FaasBaseConfig {
 
 export interface FaasInputs extends FaasBaseConfig {
   name?: string;
+  src?: string;
+  code?: {
+    bucket: string;
+    object: string;
+  };
   handler: string;
 }
 

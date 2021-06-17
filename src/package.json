@@ -1,5 +1,10 @@
 {
   "dependencies": {
-    "tencent-component-toolkit": "^2.11.0"
+    "@types/adm-zip": "^0.4.34",
+    "@types/rimraf": "^3.0.0",
+    "adm-zip": "^0.5.5",
+    "fast-glob": "^3.2.5",
+    "rimraf": "^3.0.2",
+    "tencent-component-toolkit": "^2.12.1"
   }
 }

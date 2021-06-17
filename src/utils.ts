@@ -48,3 +48,7 @@ export const mergeArray = <T>(
 
   return arr2 as T[];
 };
+
+export function getTimestamp() {
+  return Math.floor(Date.now() / 1000);
+}

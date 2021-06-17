@@ -4,11 +4,18 @@ exports.index = async (event, context) => {
   };
 };
 
-exports.userList = async (event, context) => {
+exports.list = async (event, context) => {
   return [
     {
       id: 1,
       name: 'test',
     },
   ];
+};
+
+exports.detail = async (event, context) => {
+  return {
+    id: 1,
+    name: 'test',
+  };
 };

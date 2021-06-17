@@ -1,3 +1,6 @@
+import { mkdirSync } from 'fs';
+import { join as pathJoin } from 'path';
+import { sync as rmSync } from 'rimraf';
 import { Cos } from 'tencent-component-toolkit';
 import {
   Credentials,
@@ -14,25 +17,30 @@ import {
 } from './interface';
 import { CONFIGS } from './config';
 import { ApiError } from 'tencent-component-toolkit/lib/utils/error';
-import { randomId, getType, removeAppId } from './utils';
+import { getType, randomId, removeAppId, getTimestamp } from './utils';
+import { zip, unzip } from './zipper';
 
 function getDefaultBucketName(region: string) {
   return `sls-cloudfunction-${region}-code`;
 }
 
-function getDefultObjectName(compName: string) {
-  return `/${compName}_${randomId()}-${Math.floor(Date.now() / 1000)}.zip`;
+function getDefultObjectName(instance: ComponentInstance) {
+  return `${instance.name}-${instance.stage}-${instance.app}-${randomId()}-${getTimestamp()}.zip`;
 }
 
 async function uploadCodeToCos({
+  instance,
   credentials,
   appId,
   inputs,
+  scfInputsList,
 }: {
+  instance: ComponentInstance;
   credentials: Credentials;
   appId: string;
   inputs: Inputs;
-}) {
+  scfInputsList: FaasInputs[];
+}): Promise<FaasInputs[]> {
   const region = inputs.region || CONFIGS.region;
   const { srcOriginal } = inputs;
   inputs.srcOriginal = inputs.srcOriginal || inputs.src;
@@ -50,12 +58,10 @@ async function uploadCodeToCos({
     ? removeAppId(tempSrc.bucket, appId)
     : getDefaultBucketName(region);
 
-  const objectName = tempSrc.object || getDefultObjectName(CONFIGS.compName);
-
   const cos = new Cos(credentials, region);
   const bucket = `${bucketName}-${appId}`;
 
-  // create new bucket, and setup lifecycle for it
+  // 如果桶没有指定，则创建默认桶
   if (!tempSrc.bucket) {
     await cos.deploy({
       bucket,
@@ -64,21 +70,66 @@ async function uploadCodeToCos({
     });
   }
 
-  if (!tempSrc.object) {
-    console.log(`Uploading code ${objectName} to bucket ${bucket}`);
-    await cos.upload({
-      bucket,
-      file: inputs.src as string,
-      key: objectName,
-    });
+  // 此标识为了防止全量代码重复上传，不同函数如果没有指定子目录（src)，可以复用代码
+  let whileCodeUploaded = false;
+  const defaultObjectName = getDefultObjectName(instance);
+  for (let i = 0; i < scfInputsList.length; i++) {
+    const curScf = scfInputsList[i];
+    const scfCodeSrc = curScf.src?.replace('./', '');
+    const zipFile = inputs.src as string;
+    if (scfCodeSrc) {
+      const scfObjectName = `${curScf.name}-${randomId()}-${getTimestamp()}.zip`;
+      // 上传子目录代码
+      const scfPath = `/tmp/${curScf.name}`;
+      mkdirSync(scfPath);
+
+      // 将函数代码解压到指定目录
+      await unzip({
+        filename: zipFile,
+        target: `${scfPath}/code`,
+        overwrite: true,
+        entryName: scfCodeSrc,
+      });
+      const scfZipPath = `${scfPath}/${scfObjectName}`;
+      // 将函数代码压缩到指定目录
+      await zip({
+        src: pathJoin(`${scfPath}/code`, curScf.src!),
+        filename: scfZipPath,
+      });
+      console.log(`Uploading code ${scfObjectName} to bucket ${bucket}`);
+
+      await cos.upload({
+        bucket,
+        file: scfZipPath,
+        key: scfObjectName,
+      });
+
+      // 清理函数代码缓存：代码目录和zip包
+      rmSync(scfPath);
+
+      scfInputsList[i].code = {
+        bucket: bucketName,
+        object: scfObjectName,
+      };
+    } else {
+      if (!whileCodeUploaded) {
+        // 上传全量代码
+        console.log(`Uploading code ${defaultObjectName} to bucket ${bucket}`);
+        await cos.upload({
+          bucket,
+          file: zipFile,
+          key: defaultObjectName,
+        });
+        whileCodeUploaded = true;
+      }
+      scfInputsList[i].code = {
+        bucket: bucketName,
+        object: defaultObjectName,
+      };
+    }
   }
 
-  return {
-    code: {
-      bucket: bucketName,
-      object: objectName,
-    },
-  };
+  return scfInputsList;
 }
 
 function getApigwState(name: string, instance: ComponentInstance): ApigwState {
@@ -219,16 +270,14 @@ export const formatInputs = async ({
   commandFunctionKey,
 }: FormatOptions): Promise<FormatOutputs> => {
   const region = inputs.region || CONFIGS.region;
-  const { code } = await uploadCodeToCos({ credentials, appId, inputs });
 
   const commonInputs = {
     namespace: inputs.namespace || CONFIGS.namespace,
     runtime: inputs.runtime || CONFIGS.runtime,
     description: inputs.description || CONFIGS.description,
-    code,
   };
 
-  const scfInputsList: FaasInputs[] = [];
+  let scfInputsList: FaasInputs[] = [];
   const { functions } = inputs;
 
   let isFunctionExist = false;
@@ -254,6 +303,8 @@ export const formatInputs = async ({
     }
     functionNameMap[key] = scfInputs.name!;
   });
+
+  scfInputsList = await uploadCodeToCos({ instance, credentials, appId, inputs, scfInputsList });
 
   // 如果指定了函数，但是没法找到，就报错
   if (commandFunctionKey && !isFunctionExist) {
