@@ -1,0 +1,45 @@
+app: multi-scf
+stage: dev
+
+component: multi-scf
+name: event_web_image_demo
+
+inputs:
+  src:
+    # 这里必须指定代码目录，云端自动根据函数配置来拆分函数代码
+    src: ./
+    exclude:
+      - .env
+  region: ap-chengdu
+  runtime: Nodejs12.16
+  memorySize: 128
+  timeout: 3
+  functions:
+    server:
+      type: web
+      image:
+        namespace: sls-scf
+        repositoryName: nodejs_test
+        tagName: latest
+    schedule:
+      type: event
+      src: ./schedule
+      handler: index.index
+  triggers:
+    - type: timer
+      function: schedule
+      parameters:
+        name: timer
+        cronExpression: '*/5 * * * * * *' # 每5秒触发一次
+        enable: true
+        argument: argument # 额外的参数
+    - type: apigw
+      parameters:
+        name: serverless
+        protocols:
+          - https
+          - http
+        apis:
+          - path: /
+            method: ANY
+            function: server

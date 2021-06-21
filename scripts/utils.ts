@@ -102,8 +102,8 @@ export async function rmdirSync(source: string) {
   });
 }
 
-export function getExampleConfig() {
-  const examplePath = join(__dirname, '..', 'example');
+export function getExampleConfig(name = '') {
+  const examplePath = join(__dirname, '..', 'examples', name);
   const exampleYaml = join(examplePath, 'serverless.yml');
   const yamlConfig = parseYaml(exampleYaml) as ServerlessConfig;
 

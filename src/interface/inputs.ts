@@ -14,6 +14,8 @@ export interface KeyValue {
 // }
 
 export interface FaasBaseConfig {
+  // 函数类型
+  type?: string;
   // 运行环境
   runtime?: string;
   // 运行内存
@@ -80,10 +82,40 @@ export interface FaasInputs extends FaasBaseConfig {
   name?: string;
   src?: string;
   code?: {
-    bucket: string;
-    object: string;
+    bucket?: string;
+    object?: string;
+
+    imageType?: string;
+    imageUri?: string;
+    registryId?: string;
+    command?: string;
+    args?: string;
   };
   handler: string;
+
+  // 镜像配置
+  image?: {
+    // 命名空间
+    namespace: string;
+    // 镜像名称
+    repositoryName: string;
+    // 容器镜像服务名称，企业版必须
+    registryName?: string;
+    // 镜像版本
+    tagName?: string;
+    // 容器启动命名
+    command?: string;
+    // # 容器启动参数
+    args?: string;
+  };
+
+  imageConfig?: {
+    registryId?: string;
+    imageType: string;
+    imageUri: string;
+    command?: string;
+    args?: string;
+  };
 }
 
 export interface TriggerFunctionConfig {
@@ -94,6 +126,7 @@ export interface TriggerFunctionConfig {
 
 export interface TriggerFunctionConfig {
   name: string;
+  type?: string;
   namespace?: string;
   qualifier?: string;
   // 兼容旧的配置

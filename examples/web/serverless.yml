@@ -1,0 +1,41 @@
+app: multi-scf
+stage: dev
+
+component: multi-scf
+name: web_demo
+
+inputs:
+  src:
+    # 这里必须指定代码目录，云端自动根据函数配置来拆分函数代码
+    src: ./
+    exclude:
+      - .env
+  region: ap-chengdu
+  runtime: Nodejs12.16
+  memorySize: 128
+  timeout: 3
+  type: web
+  functions:
+    index:
+      src: ./index
+      handler: scf_bootstrap
+    user:
+      src: ./user
+      handler: scf_bootstrap
+  triggers:
+    - type: apigw
+      parameters:
+        name: serverless
+        protocols:
+          - https
+          - http
+        # id: service-xxx # 如果不配置，会自动创建
+        apis:
+          - path: /
+            method: ANY
+            # api 的 function 配置优先级高于外层 function
+            function: index
+          - path: /user
+            method: ANY
+            # api 的 function 配置优先级高于外层 function
+            function: user

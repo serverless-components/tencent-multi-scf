@@ -1,3 +1,4 @@
+import { SimpleApigwDetail } from 'tencent-component-toolkit/lib/modules/triggers/interface/index';
 import { ScfOutput, TriggerOutput } from './outputs';
 
 export interface ApigwState {
@@ -12,4 +13,6 @@ export type State = {
   functions: ScfOutput[];
 
   triggers?: TriggerOutput[];
+
+  apigws?: SimpleApigwDetail[];
 };

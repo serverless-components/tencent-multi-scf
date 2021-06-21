@@ -1,7 +1,7 @@
 import { mkdirSync } from 'fs';
 import { join as pathJoin } from 'path';
 import { sync as rmSync } from 'rimraf';
-import { Cos } from 'tencent-component-toolkit';
+import { Cos, Tcr } from 'tencent-component-toolkit';
 import {
   Credentials,
   Inputs,
@@ -73,14 +73,14 @@ async function uploadCodeToCos({
   // 此标识为了防止全量代码重复上传，不同函数如果没有指定子目录（src)，可以复用代码
   let whileCodeUploaded = false;
   const defaultObjectName = getDefultObjectName(instance);
-  for (let i = 0; i < scfInputsList.length; i++) {
-    const curScf = scfInputsList[i];
-    const scfCodeSrc = curScf.src?.replace('./', '');
+
+  async function uploadFaasCode(faasConfig: FaasInputs) {
+    const scfCodeSrc = faasConfig.src?.replace('./', '');
     const zipFile = inputs.src as string;
     if (scfCodeSrc) {
-      const scfObjectName = `${curScf.name}-${randomId()}-${getTimestamp()}.zip`;
+      const scfObjectName = `${faasConfig.name}-${randomId()}-${getTimestamp()}.zip`;
       // 上传子目录代码
-      const scfPath = `/tmp/${curScf.name}`;
+      const scfPath = `/tmp/${faasConfig.name}`;
       mkdirSync(scfPath);
 
       // 将函数代码解压到指定目录
@@ -93,7 +93,7 @@ async function uploadCodeToCos({
       const scfZipPath = `${scfPath}/${scfObjectName}`;
       // 将函数代码压缩到指定目录
       await zip({
-        src: pathJoin(`${scfPath}/code`, curScf.src!),
+        src: pathJoin(`${scfPath}/code`, faasConfig.src!),
         filename: scfZipPath,
       });
       console.log(`Uploading code ${scfObjectName} to bucket ${bucket}`);
@@ -107,25 +107,70 @@ async function uploadCodeToCos({
       // 清理函数代码缓存：代码目录和zip包
       rmSync(scfPath);
 
-      scfInputsList[i].code = {
+      return {
         bucket: bucketName,
         object: scfObjectName,
       };
+    }
+    if (!whileCodeUploaded) {
+      // 上传全量代码
+      console.log(`Uploading code ${defaultObjectName} to bucket ${bucket}`);
+      await cos.upload({
+        bucket,
+        file: zipFile,
+        key: defaultObjectName,
+      });
+      whileCodeUploaded = true;
+    }
+    return {
+      bucket: bucketName,
+      object: defaultObjectName,
+    };
+  }
+  for (let i = 0; i < scfInputsList.length; i++) {
+    const curScf = scfInputsList[i];
+    if (!curScf.image) {
+      const code = await uploadFaasCode(curScf);
+      scfInputsList[i].code = code;
     } else {
-      if (!whileCodeUploaded) {
-        // 上传全量代码
-        console.log(`Uploading code ${defaultObjectName} to bucket ${bucket}`);
-        await cos.upload({
-          bucket,
-          file: zipFile,
-          key: defaultObjectName,
+      // 镜像类型不需要上传代码
+      const {
+        registryName,
+        namespace: imageNamespace,
+        repositoryName,
+        tagName = 'latest',
+        command: imageCommand,
+        args: imageArgs,
+      } = curScf.image;
+      const tcr = new Tcr(credentials, region);
+      // 企业版需要配置 registryName (实例名称)
+      if (registryName) {
+        const imageInfo = await tcr.getImageInfoByName({
+          registryName,
+          namespace: imageNamespace,
+          repositoryName,
+          tagName,
         });
-        whileCodeUploaded = true;
+        scfInputsList[i].imageConfig = {
+          imageType: imageInfo.imageType,
+          imageUri: imageInfo.imageUri,
+          registryId: imageInfo.registryId,
+          command: imageCommand,
+          args: imageArgs,
+        };
+      } else {
+        const imageInfo = await tcr.getPersonalImageInfo({
+          namespace: imageNamespace,
+          repositoryName,
+          tagName,
+        });
+        scfInputsList[i].imageConfig = {
+          imageType: imageInfo.imageType,
+          imageUri: imageInfo.imageUri,
+          command: imageCommand,
+          args: imageArgs,
+        };
       }
-      scfInputsList[i].code = {
-        bucket: bucketName,
-        object: defaultObjectName,
-      };
     }
   }
 
@@ -167,7 +212,7 @@ export function formatTriggerInputs({
   triggers = [],
   instance,
   commandFunctionKey,
-  functionNameMap,
+  faasKeyMap,
   function: { namespace = 'default' },
 }: FormatTriggerOptions): TriggerSdkInputs[] {
   // 格式化触发器参数，输入底层依赖 SDK
@@ -188,8 +233,9 @@ export function formatTriggerInputs({
       const apiList = item.parameters.apis?.filter((api) => {
         const functionKey = api.function as string;
         api.function = {
-          name: functionNameMap[functionKey],
-          functionName: functionNameMap[functionKey],
+          name: faasKeyMap[functionKey].name,
+          type: faasKeyMap[functionKey].type,
+          functionName: faasKeyMap[functionKey].name,
           functionNamespace: namespace,
           functionQualifier: item.parameters.qualifier,
         };
@@ -219,7 +265,8 @@ export function formatTriggerInputs({
         isNeeded = true;
       }
       item.function = {
-        name: functionNameMap[functionKey],
+        name: faasKeyMap[functionKey].name,
+        type: faasKeyMap[functionKey].type,
       };
     }
 
@@ -272,6 +319,7 @@ export const formatInputs = async ({
   const region = inputs.region || CONFIGS.region;
 
   const commonInputs = {
+    type: inputs.type || CONFIGS.type,
     namespace: inputs.namespace || CONFIGS.namespace,
     runtime: inputs.runtime || CONFIGS.runtime,
     description: inputs.description || CONFIGS.description,
@@ -282,7 +330,7 @@ export const formatInputs = async ({
 
   let isFunctionExist = false;
 
-  const functionNameMap: { [key: string]: string } = {};
+  const faasKeyMap: { [key: string]: { name: string; type: string } } = {};
   Object.entries(functions).forEach(([key, func]) => {
     const scfInputs = {
       ...commonInputs,
@@ -301,7 +349,10 @@ export const formatInputs = async ({
       scfInputs.name = scfInputs.name || formatedName;
       scfInputsList.push(scfInputs);
     }
-    functionNameMap[key] = scfInputs.name!;
+    faasKeyMap[key] = {
+      name: scfInputs.name!,
+      type: scfInputs.type,
+    };
   });
 
   scfInputsList = await uploadCodeToCos({ instance, credentials, appId, inputs, scfInputsList });
@@ -318,7 +369,7 @@ export const formatInputs = async ({
     triggers: inputs.triggers,
     instance,
     commandFunctionKey,
-    functionNameMap,
+    faasKeyMap,
     function: {
       namespace: inputs.namespace,
     },

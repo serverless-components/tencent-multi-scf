@@ -7,12 +7,13 @@ export interface TriggerDetail {
 
 export interface ScfOutput {
   name: string;
-  runtime: string;
-  handler: string;
+  region: string;
   memorySize: number;
   timeout: number;
   namespace: string;
   type: string;
+  runtime?: string;
+  handler?: string;
   description?: string;
 
   triggers?: TriggerDetail[];

@@ -1,14 +1,33 @@
-import { join } from 'path';
+import { join, resolve as pathResolve } from 'path';
+import { readdirSync, statSync } from 'fs';
 import * as dotenv from 'dotenv';
 import * as ora from 'ora';
 import * as chalk from 'chalk';
 import { program } from 'commander';
+import { prompt } from 'inquirer';
 import { getExampleConfig, getServerlessSdk } from './utils';
 import { COMPONENT_NAME } from './config';
 
 dotenv.config({
   path: join(__dirname, '..', '.env.test'),
 });
+
+interface Options {
+  ver?: string;
+  dev?: string;
+  name?: string;
+  inputs?: string;
+  env?: string;
+  template?: boolean;
+  remove?: boolean;
+}
+
+interface Example {
+  // 选择案例时显示的名称
+  name: string;
+  // examples 文件夹中的子目录名称
+  value: string;
+}
 
 const credentials = {
   tencent: {
@@ -17,7 +36,38 @@ const credentials = {
   },
 };
 
-function parseInputs(inputs: string) {
+// 实例列表
+const EXAMPLES: Example[] = [
+  {
+    name: '事件函数',
+    value: 'event',
+  },
+  {
+    name: 'Web 函数',
+    value: 'web',
+  },
+  {
+    name: '事件函数+Web 镜像函数',
+    value: 'event+image',
+  },
+];
+
+function getSubdir(p: string) {
+  const res = readdirSync(p);
+  return res.filter((item) => {
+    const absolutePath = pathResolve(p, item);
+    const stat = statSync(absolutePath);
+    return stat.isDirectory();
+  });
+}
+
+export function getExamples() {
+  const examplePath = join(__dirname, '../examples/');
+  const subdirs = getSubdir(examplePath);
+  return subdirs;
+}
+
+function parseInputs(inputs?: string) {
   const inputObject: { [key: string]: any } = {};
   if (!inputs) {
     return inputObject;
@@ -47,8 +97,8 @@ function parseInputs(inputs: string) {
   return inputObject;
 }
 
-async function deploy(options: { [propName: string]: any }) {
-  const { examplePath, yamlConfig } = getExampleConfig();
+async function deployExample(options: Options) {
+  const { examplePath, yamlConfig } = getExampleConfig(options.name);
   const appId = process.env.TENCENT_APP_ID as string;
 
   if (options.template) {
@@ -107,6 +157,24 @@ async function deploy(options: { [propName: string]: any }) {
   spinner.stop();
 }
 
+async function deploy(options: Options) {
+  if (!options.name) {
+    // ask to select framework
+    const anwsers = await prompt([
+      {
+        type: 'list',
+        name: 'example',
+        message: 'Please select example to be deploy ?',
+        default: 'event-scf',
+        choices: EXAMPLES,
+      },
+    ]);
+    options.name = anwsers.example;
+  }
+
+  await deployExample(options);
+}
+
 async function run() {
   program
     .description('Deploy example')
@@ -115,6 +183,7 @@ async function run() {
     .option('-t, --template [template]', 'use template to deploy')
     .option('-r, --remove [remove]', 'remove example')
     .option('-i, --inputs [inputs]', 'customize inputs')
+    .option('-n, --name [name]', 'example name')
     .action((options) => {
       deploy(options);
     });

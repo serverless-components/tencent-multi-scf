@@ -1,10 +1,7 @@
 import { InvokeFunctionInputs, GetFunctionLogInputs } from './interface/inputs';
 import { Component } from '@serverless/core';
 import { Scf, TriggerManager } from 'tencent-component-toolkit';
-import {
-  ScfDeployInputs,
-  ScfDeployOutputs,
-} from 'tencent-component-toolkit/lib/modules/scf/interface';
+import { ScfDeployInputs } from 'tencent-component-toolkit/lib/modules/scf/interface';
 import { ApiError } from 'tencent-component-toolkit/lib/utils/error';
 import { formatInputs } from './formatter';
 import {
@@ -19,6 +16,7 @@ import {
 } from './interface';
 import { deepClone, mergeArray } from './utils';
 import { CONFIGS } from './config';
+import { SimpleApigwDetail } from 'tencent-component-toolkit/lib/modules/triggers/interface/index';
 
 export class ServerlessComponent extends Component<State> {
   getCredentials(): Credentials {
@@ -61,25 +59,21 @@ export class ServerlessComponent extends Component<State> {
     const credentials = this.getCredentials();
     const scf = new Scf(credentials, region);
 
-    const deployTasks: Promise<ScfDeployOutputs>[] = [];
-    scfInputsList.forEach((item) => {
-      deployTasks.push(scf.deploy(item as ScfDeployInputs));
-    });
-    const res = await Promise.all(deployTasks);
-
-    // 格式化函数输出
-    return res.map((item) => {
-      return {
-        type: item.Type,
-        name: item.FunctionName,
-        timeout: item.Timeout,
-        region: region,
-        namespace: item.Namespace,
-        runtime: item.Runtime,
-        handler: item.Handler,
-        memorySize: item.MemorySize,
-      } as ScfOutput;
-    });
+    const outputs: ScfOutput[] = [];
+    for (const item of scfInputsList) {
+      const res = await scf.deploy(item as ScfDeployInputs);
+      outputs.push({
+        region,
+        type: res.Type,
+        name: res.FunctionName,
+        timeout: res.Timeout,
+        namespace: res.Namespace,
+        runtime: res.Runtime,
+        handler: res.Handler,
+        memorySize: res.MemorySize,
+      });
+    }
+    return outputs;
   }
 
   async deploy(inputs: Inputs): Promise<Outputs> {
@@ -111,13 +105,15 @@ export class ServerlessComponent extends Component<State> {
     outputs.functions = deepClone(functions);
 
     // 部署触发器
-    const triggers = await triggerManager.bulkCreateTriggers(triggerInputsList);
-    outputs.triggers = triggers;
+    const { triggerList, apigwList } = await triggerManager.bulkCreateTriggers(triggerInputsList);
+    outputs.triggers = triggerList;
 
     this.state = {
       region,
       functions: this.state.functions || [],
       triggers: this.state.triggers || [],
+      // 存储API网关类型触发器信息，方便查询已经创建的 serviceId
+      apigws: apigwList,
     };
 
     if (commandFunctionKey) {
@@ -125,13 +121,17 @@ export class ServerlessComponent extends Component<State> {
       // 如果是存在的函数，则修改状态，如果不存在，则添加到 state.functions 数组中
       const stateFunctions = mergeArray<ScfOutput>(functions, this.state.functions, 'name');
       // 如果是存在的触发器，则修改状态，如果不存在，则添加到 state.triggers 数组中
-      const stateTriggers = mergeArray<TriggerOutput>(triggers, this.state.triggers || [], 'name');
+      const stateTriggers = mergeArray<TriggerOutput>(
+        triggerList,
+        this.state.triggers || [],
+        'name',
+      );
 
       this.state.functions = this.getFunctionTriggers(stateFunctions, stateTriggers);
       this.state.triggers = stateTriggers;
     } else {
-      this.state.functions = this.getFunctionTriggers(functions, triggers);
-      this.state.triggers = triggers;
+      this.state.functions = this.getFunctionTriggers(functions, triggerList);
+      this.state.triggers = triggerList;
     }
 
     return outputs;
@@ -144,17 +144,24 @@ export class ServerlessComponent extends Component<State> {
     const { function: commandFunctionName } = inputs;
 
     const { region } = this.state;
-    const { functions } = this.state;
+    const { functions, apigws: stateApigws } = this.state;
     const scf = new Scf(credentials, region);
 
     // 删除函数
     let isFunctionExist = false;
+    let apigwNeedRelease: SimpleApigwDetail[] = [];
     const removeTasks: Promise<boolean>[] = [];
     const newFunctions = functions.filter((item) => {
       const pms = async (): Promise<boolean> => {
+        const apigwList = (stateApigws || []).filter((aItem) => {
+          return aItem.functionName === item.name;
+        });
+        apigwNeedRelease = apigwNeedRelease.concat(apigwList);
+
         return scf.remove({
           ...item,
           functionName: item.name,
+          isAutoRelease: false,
         });
       };
       if (commandFunctionName) {
@@ -178,6 +185,10 @@ export class ServerlessComponent extends Component<State> {
     }
 
     await Promise.all(removeTasks);
+
+    const triggerManager = new TriggerManager(credentials, region);
+
+    await triggerManager.bulkReleaseApigw(apigwNeedRelease);
 
     this.state = {
       functions: newFunctions,

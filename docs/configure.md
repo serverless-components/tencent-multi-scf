@@ -19,6 +19,7 @@ inputs:
   runtime: Nodejs12.16
   namespace: default
   memorySize: 128
+  type: event # 函数类型
   timeout: 3
   functions:
     index:
@@ -27,6 +28,15 @@ inputs:
       handler: app.userList
       memorySize: 256
       timeout: 10
+    user-detail:
+      type: web
+      image: # 镜像配置
+        registryName: serverless # 容器镜像服务名称，企业版必须
+        namespace: scf_images # 命名空间
+        repositoryName: nodejs_server # 镜像名称
+        tagName: latest # 镜像版本
+        command: node index.js # 容器启动命名
+        args: test # 容器启动参数
   triggers:
     - type: timer
       function: index

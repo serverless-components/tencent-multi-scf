@@ -14,10 +14,16 @@ export interface Credentials {
 
 export type ComponentInstance = Component<State>;
 
+export interface FaasKeyMap {
+  [key: string]: {
+    name: string;
+    type?: string;
+  };
+}
 export interface FormatTriggerOptions {
   triggers?: TriggerInputs[];
   instance: ComponentInstance;
-  functionNameMap: { [key: string]: string };
+  faasKeyMap: FaasKeyMap;
   commandFunctionKey?: string;
 
   function: {

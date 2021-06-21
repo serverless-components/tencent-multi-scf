@@ -2,14 +2,14 @@ app: multi-scf
 stage: dev
 
 component: multi-scf
-name: demo
+name: event_demo
 
 inputs:
   src:
     src: ./
     exclude:
       - .env
-  region: ap-guangzhou
+  region: ap-chengdu
   runtime: Nodejs12.16
   memorySize: 128
   timeout: 3
