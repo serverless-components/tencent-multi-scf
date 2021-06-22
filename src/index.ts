@@ -149,14 +149,14 @@ export class ServerlessComponent extends Component<State> {
 
     // 删除函数
     let isFunctionExist = false;
-    let apigwNeedRelease: SimpleApigwDetail[] = [];
+    let apigwNeedRemove: SimpleApigwDetail[] = [];
     const removeTasks: Promise<boolean>[] = [];
     const newFunctions = functions.filter((item) => {
       const pms = async (): Promise<boolean> => {
         const apigwList = (stateApigws || []).filter((aItem) => {
           return aItem.functionName === item.name;
         });
-        apigwNeedRelease = apigwNeedRelease.concat(apigwList);
+        apigwNeedRemove = apigwNeedRemove.concat(apigwList);
 
         return scf.remove({
           ...item,
@@ -188,7 +188,8 @@ export class ServerlessComponent extends Component<State> {
 
     const triggerManager = new TriggerManager(credentials, region);
 
-    await triggerManager.bulkReleaseApigw(apigwNeedRelease);
+    // 不删除网关，只删除api
+    await triggerManager.bulkReleaseApigw(apigwNeedRemove);
 
     this.state = {
       functions: newFunctions,
