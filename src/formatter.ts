@@ -1,7 +1,7 @@
 import { mkdirSync } from 'fs';
 import { join as pathJoin } from 'path';
 import { sync as rmSync } from 'rimraf';
-import { Cos, Tcr } from 'tencent-component-toolkit';
+import { Cos } from 'tencent-component-toolkit';
 import {
   Credentials,
   Inputs,
@@ -135,38 +135,25 @@ async function uploadCodeToCos({
     } else {
       // 镜像类型不需要上传代码
       const {
-        registryName,
-        namespace: imageNamespace,
-        repositoryName,
-        tagName = 'latest',
+        registryId,
+        imageUrl,
+        imageType = 'personal',
         command: imageCommand,
         args: imageArgs,
       } = curScf.image;
-      const tcr = new Tcr(credentials, region);
-      // 企业版需要配置 registryName (实例名称)
-      if (registryName) {
-        const imageInfo = await tcr.getImageInfoByName({
-          registryName,
-          namespace: imageNamespace,
-          repositoryName,
-          tagName,
-        });
+      // 企业版需要配置 registryId (实例 ID)
+      if (registryId) {
         scfInputsList[i].imageConfig = {
-          imageType: imageInfo.imageType,
-          imageUri: imageInfo.imageUri,
-          registryId: imageInfo.registryId,
+          imageType,
+          imageUri: imageUrl,
+          registryId,
           command: imageCommand,
           args: imageArgs,
         };
       } else {
-        const imageInfo = await tcr.getPersonalImageInfo({
-          namespace: imageNamespace,
-          repositoryName,
-          tagName,
-        });
         scfInputsList[i].imageConfig = {
-          imageType: imageInfo.imageType,
-          imageUri: imageInfo.imageUri,
+          imageType,
+          imageUri: imageUrl,
           command: imageCommand,
           args: imageArgs,
         };

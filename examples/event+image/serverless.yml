@@ -18,9 +18,8 @@ inputs:
     server:
       type: web
       image:
-        namespace: sls-scf
-        repositoryName: nodejs_test
-        tagName: latest
+        imageType: personal
+        imageUrl: ${env:image_url} # 请修改为指定镜像版本 URL
     schedule:
       type: event
       src: ./schedule

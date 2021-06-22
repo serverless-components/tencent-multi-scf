@@ -31,10 +31,9 @@ inputs:
     user-detail:
       type: web
       image: # 镜像配置
-        registryName: serverless # 容器镜像服务名称，企业版必须
-        namespace: scf_images # 命名空间
-        repositoryName: nodejs_server # 镜像名称
-        tagName: latest # 镜像版本
+        registryId: tcr-xxx # 容器镜像服务实例 ID，企业版必须
+        imageUrl: abc.com:latest@sha256:xxx # 镜像版本 URL
+        imageType: personal # 镜像类型
         command: node index.js # 容器启动命名
         args: test # 容器启动参数
   triggers:
@@ -169,6 +168,7 @@ functions:
 | 参数名称          | 必选 | 类型                        | 默认值  | 描述                                                                                                      |
 | ----------------- | ---- | --------------------------- | ------- | --------------------------------------------------------------------------------------------------------- |
 | handler           | 是   | string                      |         | 处理方法名称                                                                                              |
+| type              | 否   | string                      | `event` | 函数类型，支持：event、web                                                                                |
 | name              | 否   | string                      |         | 函数名称                                                                                                  |
 | src               | 否   | string                      |         | 代码目录，相对于 [Src](#Src) 指定目录                                                                     |
 | role              | 否   | string                      |         | 运行角色。                                                                                                |
@@ -187,6 +187,7 @@ functions:
 | traceEnable       | 否   | boolean                     | `false` | 是否启用状态追踪，如果要配置为 `true`，必须配置 `asyncRunEnable` 为 `true`                                |
 | installDependency | 否   | boolean                     | `false` | 是否自动在线安装依赖                                                                                      |
 | eip               | 否   | boolean                     | `false` | 是否[固定出口 IP][固定出口ip]                                                                             |
+| image             | 否   | [Image](#Image)             |         | 镜像配置                                                                                                  |
 
 **重要字段说明**
 
@@ -261,6 +262,26 @@ functions:
 | mountInsId     |  是  | string | 文件系统挂载点 id      |
 | localMountDir  |  是  | string | 本地挂载点，云函数目录 |
 | remoteMountDir |  是  | string | 远程挂载点，CFS 目录   |
+
+### Image
+
+镜像相关配置：
+
+| 参数名称   | 必选 | 类型   | 默认值     | 描述                                                   |
+| ---------- | ---- | ------ | ---------- | :----------------------------------------------------- |
+| imageUrl   | 是   | string |            | 镜像版本 URL                                           |
+| imageType  | 否   | string | `personal` | 镜像类型，支持：personal、enterprise、public           |
+| registryId | 否   | string |            | [容器镜像服务][tcr] 实例 ID，使用企业版镜像时必须      |
+| command    | 否   | string |            | 容器启动命令，默认使用镜像中的 `Entrypoint` 或者 `CMD` |
+| args       | 否   | string |            | 容器启动参数，默认使用惊醒中的 `CMD`                   |
+
+注意：
+
+`imageUrl` 拼接格式为 `<仓库地址>:<镜像版本>@<镜像ID(sha256)>`，如下：
+
+```text
+ccr.ccs.tencentyun.com/sls-scf/nodejs_test:latest@sha256:xxx
+```
 
 ## Trigger
 

@@ -95,14 +95,12 @@ export interface FaasInputs extends FaasBaseConfig {
 
   // 镜像配置
   image?: {
-    // 命名空间
-    namespace: string;
-    // 镜像名称
-    repositoryName: string;
-    // 容器镜像服务名称，企业版必须
-    registryName?: string;
-    // 镜像版本
-    tagName?: string;
+    // 镜像版本 URL，这里用 imageUrl，而不用 imageUri，为了方便用户配置和理解，i 字母也容易写错。（底层云api用的是 ImageUri）
+    imageUrl: string;
+    // 容器镜像服务实例 ID，企业版必须
+    registryId?: string;
+    // 镜像类型
+    imageType?: string;
     // 容器启动命名
     command?: string;
     // # 容器启动参数
