@@ -119,13 +119,17 @@ export class ServerlessComponent extends Component<State> {
     if (commandFunctionKey) {
       // 如果传入指定函数名称，则需要查找已经存在的函数和触发器状态
       // 如果是存在的函数，则修改状态，如果不存在，则添加到 state.functions 数组中
-      const stateFunctions = mergeArray<ScfOutput>(functions, this.state.functions, 'name');
+      const stateFunctions = mergeArray<ScfOutput>({
+        arr1: functions,
+        arr2: this.state.functions || [],
+        compareKey: 'name',
+      });
       // 如果是存在的触发器，则修改状态，如果不存在，则添加到 state.triggers 数组中
-      const stateTriggers = mergeArray<TriggerOutput>(
-        triggerList,
-        this.state.triggers || [],
-        'name',
-      );
+      const stateTriggers = mergeArray<TriggerOutput>({
+        arr1: triggerList,
+        arr2: this.state.triggers || [],
+        compareKey: 'name',
+      });
 
       this.state.functions = this.getFunctionTriggers(stateFunctions, stateTriggers);
       this.state.triggers = stateTriggers;
@@ -137,14 +141,14 @@ export class ServerlessComponent extends Component<State> {
     return outputs;
   }
 
-  async remove(inputs: Inputs): Promise<boolean> {
+  async remove(inputs: Inputs): Promise<any> {
     console.log(`正在移除多函数应用`);
 
     const credentials = this.getCredentials();
     const { function: commandFunctionName } = inputs;
 
     const { region } = this.state;
-    const { functions, apigws: stateApigws } = this.state;
+    const { functions = [], apigws: stateApigws } = this.state;
     const scf = new Scf(credentials, region);
 
     // 删除函数
@@ -191,11 +195,21 @@ export class ServerlessComponent extends Component<State> {
     // 不删除网关，只删除api
     await triggerManager.bulkReleaseApigw(apigwNeedRemove);
 
-    this.state = {
-      functions: newFunctions,
-    } as State;
+    if (newFunctions.length > 0) {
+      this.state = {
+        functions: newFunctions,
+      } as State;
+      return {
+        region,
+        functions: newFunctions,
+        triggers: [],
+      };
+    }
 
-    return true;
+    // 清空 state
+    this.state = {};
+
+    return {};
   }
 
   /**

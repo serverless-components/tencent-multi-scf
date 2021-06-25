@@ -9,8 +9,8 @@ export interface ApigwState {
 }
 
 export type State = {
-  region: string;
-  functions: ScfOutput[];
+  region?: string;
+  functions?: ScfOutput[];
 
   triggers?: TriggerOutput[];
 

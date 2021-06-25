@@ -27,11 +27,15 @@ export const removeAppId = (str: string, appid: string) => {
   return str.slice(0, -suffix.length);
 };
 
-export const mergeArray = <T>(
-  arr1: { [key: string]: any }[],
-  arr2: { [key: string]: any }[],
-  compareKey: string,
-): T[] => {
+export const mergeArray = <T extends { [key: string]: any }>({
+  arr1 = [],
+  arr2 = [],
+  compareKey,
+}: {
+  arr1: T[];
+  arr2: T[];
+  compareKey: string;
+}): T[] => {
   for (const newItem of arr1) {
     let existIndex = -1;
     arr2.some((item, index) => {
