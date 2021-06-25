@@ -322,8 +322,9 @@ mps - MPS 触发器
 
 | 参数名称       | 必选 |  类型   |   默认值   | 描述                                             |
 | -------------- | :--: | :-----: | :--------: | :----------------------------------------------- |
-| qualifier      |  否  | string  | `$DEFAULT` | 触发版本，默认为 `$DEFAULT`，即 `默认流量`       |
+| name           |  是  | string  |            | 触发器名称                                       |
 | cronExpression |  是  | number  |            | 触发时间，为 [Cron][定时触发器-cron表达式]表达式 |
+| qualifier      |  否  | string  | `$DEFAULT` | 触发版本，默认为 `$DEFAULT`，即 `默认流量`       |
 | argument       |  否  | object  |            | 入参参数。                                       |
 | enable         |  否  | boolean |  `false`   | 触发器是否启用                                   |
 
