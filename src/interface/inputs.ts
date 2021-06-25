@@ -27,7 +27,7 @@ export interface FaasBaseConfig {
   environments?: KeyValue[];
 
   // 环境变量，兼容老的结构 { variables: { [key: string]: string } }
-  environment: { variables: { [key: string]: string } };
+  environment?: { variables: { [key: string]: string } };
 
   // 命令空间
   namespace?: string;
