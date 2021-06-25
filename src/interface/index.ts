@@ -18,6 +18,7 @@ export interface FaasKeyMap {
   [key: string]: {
     name: string;
     type?: string;
+    namespace?: string;
   };
 }
 export interface FormatTriggerOptions {

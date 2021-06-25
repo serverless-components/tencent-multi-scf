@@ -1,3 +1,4 @@
+import { FaasKeyMap } from './interface/index';
 import { mkdirSync } from 'fs';
 import { join as pathJoin } from 'path';
 import { sync as rmSync } from 'rimraf';
@@ -254,6 +255,7 @@ export function formatTriggerInputs({
       item.function = {
         name: faasKeyMap[functionKey].name,
         type: faasKeyMap[functionKey].type,
+        namespace: faasKeyMap[functionKey].namespace,
       };
     }
 
@@ -316,7 +318,7 @@ export const formatInputs = async ({
 
   let isFunctionExist = false;
 
-  const faasKeyMap: { [key: string]: { name: string; type?: string } } = {};
+  const faasKeyMap: FaasKeyMap = {};
   Object.entries(functions).forEach(([key, func]) => {
     const scfInputs = formatFaasInputs({
       inputs: {
@@ -340,6 +342,7 @@ export const formatInputs = async ({
     faasKeyMap[key] = {
       name: scfInputs.name!,
       type: scfInputs.type,
+      namespace: scfInputs.namespace,
     };
   });
 
