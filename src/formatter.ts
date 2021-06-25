@@ -17,7 +17,7 @@ import {
 } from './interface';
 import { CONFIGS } from './config';
 import { ApiError } from 'tencent-component-toolkit/lib/utils/error';
-import { getType, randomId, removeAppId, getTimestamp } from './utils';
+import { getType, randomId, removeAppId, getTimestamp, deepClone } from './utils';
 import { zip, unzip } from './zipper';
 
 function getDefaultBucketName(region: string) {
@@ -264,16 +264,11 @@ export function formatTriggerInputs({
   return triggersInputsList as TriggerSdkInputs[];
 }
 
-export function formatFaasInputs({
-  inputs,
-}: {
-  instance?: ComponentInstance;
-  inputs: FaasInputs;
-}): FaasInputs {
-  const { environment = [], tags = [] } = inputs;
-  if (environment instanceof Array) {
+export function formatFaasInputs({ inputs }: { inputs: FaasInputs }): FaasInputs {
+  const { environments = [], tags = [] } = inputs;
+  if (environments instanceof Array) {
     const newEnvs: { [key: string]: string } = {};
-    environment.forEach(({ key, value }) => {
+    environments.forEach(({ key, value }) => {
       newEnvs[key] = value;
     });
     inputs.environment = {
@@ -305,24 +300,30 @@ export const formatInputs = async ({
 }: FormatOptions): Promise<FormatOutputs> => {
   const region = inputs.region || CONFIGS.region;
 
-  const commonInputs = {
-    type: inputs.type || CONFIGS.type,
-    namespace: inputs.namespace || CONFIGS.namespace,
-    runtime: inputs.runtime || CONFIGS.runtime,
-    description: inputs.description || CONFIGS.description,
-  };
+  const commonInputs = deepClone({
+    ...inputs,
+    ...{
+      type: inputs.type || CONFIGS.type,
+      namespace: inputs.namespace || CONFIGS.namespace,
+      runtime: inputs.runtime || CONFIGS.runtime,
+      description: inputs.description || CONFIGS.description,
+    },
+  });
+  delete commonInputs.src;
 
   let scfInputsList: FaasInputs[] = [];
   const { functions } = inputs;
 
   let isFunctionExist = false;
 
-  const faasKeyMap: { [key: string]: { name: string; type: string } } = {};
+  const faasKeyMap: { [key: string]: { name: string; type?: string } } = {};
   Object.entries(functions).forEach(([key, func]) => {
-    const scfInputs = {
-      ...commonInputs,
-      ...func,
-    };
+    const scfInputs = formatFaasInputs({
+      inputs: {
+        ...commonInputs,
+        ...func,
+      },
+    });
 
     const formatedName = formatScfName({ instance, functionKey: key });
     // 如果指定了函数名称，则过滤

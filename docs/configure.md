@@ -21,6 +21,12 @@ inputs:
   memorySize: 128
   type: event # 函数类型
   timeout: 3
+  environments:
+    - key: NODE_ENV
+      value: development
+  tags:
+    - key: slstest
+      value: slstest
   functions:
     index:
       handler: app.index
@@ -108,16 +114,16 @@ inputs:
 
 主要的参数
 
-| 参数名称       | 必选 | 类型                                        |     默认值     | 描述                                                         |
-| -------------- | :--: | :------------------------------------------ | :------------: | :----------------------------------------------------------- |
-| src            |  是  | [Src](#Src)                                 |                | 指定当前需要上传的包含工作流配置文件的目录                   |
-| region         |  否  | string                                      | `ap-guangzhou` | 工作流所在区域                                               |
-| runtime        |  否  | string                                      | `Nodejs12.16`  | 运行环境                                                     |
-| memorySize     |  否  | number                                      |     `128`      | 运行内存                                                     |
-| timeout        |  否  | number                                      |      `3`       | 超时时间                                                     |
-| functions      |  否  | [FunctionObject](#FunctionFunctionObject)[] |      `''`      | 函数配置                                                     |
-| triggers       |  否  | [Trigger](#Trigger)[]                       |      `''`      | 触发器配置                                                   |
-| ignoreTriggers |  否  | boolean                                     |    `false`     | 是否忽略触发器，如果设置为 `true`，`triggers` 参数将不起作用 |
+| 参数名称       | 必选 | 类型                                |     默认值     | 描述                                                         |
+| -------------- | :--: | :---------------------------------- | :------------: | :----------------------------------------------------------- |
+| src            |  是  | [Src](#Src)                         |                | 指定当前需要上传的包含工作流配置文件的目录                   |
+| region         |  否  | string                              | `ap-guangzhou` | 工作流所在区域                                               |
+| runtime        |  否  | string                              | `Nodejs12.16`  | 运行环境                                                     |
+| memorySize     |  否  | number                              |     `128`      | 运行内存                                                     |
+| timeout        |  否  | number                              |      `3`       | 超时时间                                                     |
+| functions      |  否  | [FunctionObject](#FunctionObject)[] |      `''`      | 函数配置                                                     |
+| triggers       |  否  | [Trigger](#Trigger)[]               |      `''`      | 触发器配置                                                   |
+| ignoreTriggers |  否  | boolean                             |    `false`     | 是否忽略触发器，如果设置为 `true`，`triggers` 参数将不起作用 |
 
 ## Src
 
@@ -165,29 +171,29 @@ functions:
 
 `Function` 对象支持配置属性如下：
 
-| 参数名称          | 必选 | 类型                        | 默认值  | 描述                                                                                                      |
-| ----------------- | ---- | --------------------------- | ------- | --------------------------------------------------------------------------------------------------------- |
-| handler           | 是   | string                      |         | 处理方法名称                                                                                              |
-| type              | 否   | string                      | `event` | 函数类型，支持：event、web                                                                                |
-| name              | 否   | string                      |         | 函数名称                                                                                                  |
-| src               | 否   | string                      |         | 代码目录，相对于 [Src](#Src) 指定目录                                                                     |
-| role              | 否   | string                      |         | 运行角色。                                                                                                |
-| description       | 否   | string                      |         | 描述                                                                                                      |
-| memorySize        | 否   | number                      | `128`   | 运行内存，单位 `MB`，范围 64、128-3072，以 128 为阶梯                                                     |
-| timeout           | 否   | number                      | `3`     | 超时时间，单位为秒，可选值范围 1-900 秒                                                                   |
-| environment       | 否   | [Environment](#Environment) |         | 环境变量                                                                                                  |
-| vpc               | 否   | [Vpc](#Vpc)                 |         | 私有网络配置                                                                                              |
-| layers            | 否   | [Layer](#Layer)[]           |         | 层                                                                                                        |
-| cls               | 否   | [Cls](#Cls)                 |         | CLS 日志配置                                                                                              |
-| tags              | 否   | [Tag](#Tag)[]               |         | 标签设置                                                                                                  |
-| cfs               | 否   | [Cfs](#Cfs)                 |         | 文件系统挂载配置，用于云函数挂载文件系统。                                                                |
-| publicAccess      | 否   | number                      | `true`  | 是否开启公网访问                                                                                          |
-| eip               | 否   | boolean                     | `false` | 固定出口 IP。默认为 false，即不启用。                                                                     |
-| asyncRunEnable    | 否   | boolean                     | `false` | 是否启用异步执行，默认最大支持 `12小时`，配置为 `true` 时，`cls` 配置必须。`此参数只有在函数创建时才有效` |
-| traceEnable       | 否   | boolean                     | `false` | 是否启用状态追踪，如果要配置为 `true`，必须配置 `asyncRunEnable` 为 `true`                                |
-| installDependency | 否   | boolean                     | `false` | 是否自动在线安装依赖                                                                                      |
-| eip               | 否   | boolean                     | `false` | 是否[固定出口 IP][固定出口ip]                                                                             |
-| image             | 否   | [Image](#Image)             |         | 镜像配置                                                                                                  |
+| 参数名称          | 必选 | 类型                          | 默认值  | 描述                                                                                                      |
+| ----------------- | ---- | ----------------------------- | ------- | --------------------------------------------------------------------------------------------------------- |
+| handler           | 是   | string                        |         | 处理方法名称                                                                                              |
+| type              | 否   | string                        | `event` | 函数类型，支持：event、web                                                                                |
+| name              | 否   | string                        |         | 函数名称                                                                                                  |
+| src               | 否   | string                        |         | 代码目录，相对于 [Src](#Src) 指定目录                                                                     |
+| role              | 否   | string                        |         | 运行角色。                                                                                                |
+| description       | 否   | string                        |         | 描述                                                                                                      |
+| memorySize        | 否   | number                        | `128`   | 运行内存，单位 `MB`，范围 64、128-3072，以 128 为阶梯                                                     |
+| timeout           | 否   | number                        | `3`     | 超时时间，单位为秒，可选值范围 1-900 秒                                                                   |
+| environments      | 否   | [Environment](#Environment)[] |         | 环境变量                                                                                                  |
+| vpc               | 否   | [Vpc](#Vpc)                   |         | 私有网络配置                                                                                              |
+| layers            | 否   | [Layer](#Layer)[]             |         | 层                                                                                                        |
+| cls               | 否   | [Cls](#Cls)                   |         | CLS 日志配置                                                                                              |
+| tags              | 否   | [Tag](#Tag)[]                 |         | 标签设置                                                                                                  |
+| cfs               | 否   | [Cfs](#Cfs)                   |         | 文件系统挂载配置，用于云函数挂载文件系统。                                                                |
+| publicAccess      | 否   | number                        | `true`  | 是否开启公网访问                                                                                          |
+| eip               | 否   | boolean                       | `false` | 固定出口 IP。默认为 false，即不启用。                                                                     |
+| asyncRunEnable    | 否   | boolean                       | `false` | 是否启用异步执行，默认最大支持 `12小时`，配置为 `true` 时，`cls` 配置必须。`此参数只有在函数创建时才有效` |
+| traceEnable       | 否   | boolean                       | `false` | 是否启用状态追踪，如果要配置为 `true`，必须配置 `asyncRunEnable` 为 `true`                                |
+| installDependency | 否   | boolean                       | `false` | 是否自动在线安装依赖                                                                                      |
+| eip               | 否   | boolean                       | `false` | 是否[固定出口 IP][固定出口ip]                                                                             |
+| image             | 否   | [Image](#Image)               |         | 镜像配置                                                                                                  |
 
 **重要字段说明**
 

@@ -24,8 +24,11 @@ export interface FaasBaseConfig {
   timeout?: number;
   // 描述
   description?: string;
+  environments?: KeyValue[];
+
   // 环境变量，兼容老的结构 { variables: { [key: string]: string } }
-  environment?: KeyValue[] | { variables: { [key: string]: string } };
+  environment: { variables: { [key: string]: string } };
+
   // 命令空间
   namespace?: string;
   // vpc 配置

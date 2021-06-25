@@ -13,6 +13,12 @@ inputs:
   runtime: Nodejs12.16
   memorySize: 128
   timeout: 3
+  tags:
+    - key: slstest
+      value: slstest
+  environments:
+    - key: ENV
+      value: test
   functions:
     index:
       handler: app.index
