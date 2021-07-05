@@ -190,7 +190,7 @@ functions:
 | layers            | 否   | [Layer](#Layer)[]             |         | 层                                                                                                        |
 | cls               | 否   | [Cls](#Cls)                   |         | CLS 日志配置                                                                                              |
 | tags              | 否   | [Tag](#Tag)[]                 |         | 标签设置                                                                                                  |
-| cfs               | 否   | [Cfs](#Cfs)                   |         | 文件系统挂载配置，用于云函数挂载文件系统。                                                                |
+| cfs               | 否   | [Cfs](#Cfs)[]                 |         | 文件系统挂载配置，用于云函数挂载文件系统。                                                                |
 | publicAccess      | 否   | number                        | `true`  | 是否开启公网访问                                                                                          |
 | eip               | 否   | boolean                       | `false` | 固定出口 IP。默认为 false，即不启用。                                                                     |
 | asyncRunEnable    | 否   | boolean                       | `false` | 是否启用异步执行，默认最大支持 `12小时`，配置为 `true` 时，`cls` 配置必须。`此参数只有在函数创建时才有效` |
