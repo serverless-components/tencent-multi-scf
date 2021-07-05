@@ -63,7 +63,14 @@ module.exports = {
     'comma-dangle': ['error', 'always-multiline'],
     'spaced-comment': 'error',
     strict: ['error', 'global'],
-    'prettier/prettier': 'error',
+    'space-before-function-paren': [
+      'error',
+      {
+        anonymous: 'always',
+        named: 'never',
+        asyncArrow: 'always',
+      },
+    ],
     '@typescript-eslint/no-unused-vars': ['error', { args: 'none' }],
     '@typescript-eslint/no-var-requires': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
