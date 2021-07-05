@@ -44,6 +44,6 @@ export interface FormatOptions {
 
 export interface FormatOutputs {
   region: string;
-  scfInputsList: FaasInputs[];
+  faasInputsList: FaasInputs[];
   triggerInputsList: TriggerSdkInputs[];
 }

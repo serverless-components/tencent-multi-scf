@@ -5,7 +5,8 @@ export interface TriggerDetail {
   [key: string]: any;
 }
 
-export interface ScfOutput {
+export interface FaasOutput {
+  key?: string;
   name: string;
   region: string;
   memorySize: number;
@@ -15,6 +16,7 @@ export interface ScfOutput {
   runtime?: string;
   handler?: string;
   description?: string;
+  latestVersion?: string;
 
   triggers?: TriggerDetail[];
   Triggers?: TriggerDetail[];
@@ -27,6 +29,6 @@ export interface TriggerOutput {
 
 export interface Outputs {
   region: string;
-  functions: ScfOutput[];
+  functions: FaasOutput[];
   triggers?: TriggerOutput[];
 }

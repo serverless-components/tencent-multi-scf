@@ -21,6 +21,8 @@ inputs:
   memorySize: 128
   type: event # 函数类型
   timeout: 3
+  isAutoPublish: false # 是否每次部署时，自动发布函数版本
+  publishDescription: Created By Serverless CLI # 自动发布版本的描述
   environments:
     - key: NODE_ENV
       value: development
@@ -114,16 +116,18 @@ inputs:
 
 主要的参数
 
-| 参数名称       | 必选 | 类型                                |     默认值     | 描述                                                         |
-| -------------- | :--: | :---------------------------------- | :------------: | :----------------------------------------------------------- |
-| src            |  是  | [Src](#Src)                         |                | 指定当前需要上传的包含工作流配置文件的目录                   |
-| region         |  否  | string                              | `ap-guangzhou` | 工作流所在区域                                               |
-| runtime        |  否  | string                              | `Nodejs12.16`  | 运行环境                                                     |
-| memorySize     |  否  | number                              |     `128`      | 运行内存                                                     |
-| timeout        |  否  | number                              |      `3`       | 超时时间                                                     |
-| functions      |  否  | [FunctionObject](#FunctionObject)[] |      `''`      | 函数配置                                                     |
-| triggers       |  否  | [Trigger](#Trigger)[]               |      `''`      | 触发器配置                                                   |
-| ignoreTriggers |  否  | boolean                             |    `false`     | 是否忽略触发器，如果设置为 `true`，`triggers` 参数将不起作用 |
+| 参数名称           | 必选 | 类型                                |         默认值          | 描述                                                         |
+| ------------------ | :--: | :---------------------------------- | :---------------------: | :----------------------------------------------------------- |
+| src                |  是  | [Src](#Src)                         |                         | 指定当前需要上传的包含工作流配置文件的目录                   |
+| region             |  否  | string                              |     `ap-guangzhou`      | 工作流所在区域                                               |
+| runtime            |  否  | string                              |      `Nodejs12.16`      | 运行环境                                                     |
+| memorySize         |  否  | number                              |          `128`          | 运行内存                                                     |
+| timeout            |  否  | number                              |           `3`           | 超时时间                                                     |
+| functions          |  否  | [FunctionObject](#FunctionObject)[] |          `''`           | 函数配置                                                     |
+| triggers           |  否  | [Trigger](#Trigger)[]               |          `''`           | 触发器配置                                                   |
+| ignoreTriggers     |  否  | boolean                             |         `false`         | 是否忽略触发器，如果设置为 `true`，`triggers` 参数将不起作用 |
+| isAutoPublish      |  否  | boolean                             |         `false`         | 是否自动发布函数版本                                         |
+| publishDescription |  否  | string                              | `Created by Serverless` | 发布版本描述                                                 |
 
 ## Src
 

@@ -5,6 +5,7 @@ const CONFIGS = {
   compName: 'multi-scf',
   namespace: 'default',
   runtime: 'Nodejs12.16',
+  publishDescription: 'Created by Serverless',
 
   cos: {
     lifecycle: [

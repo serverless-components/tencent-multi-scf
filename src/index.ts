@@ -1,14 +1,14 @@
 import { InvokeFunctionInputs, GetFunctionLogInputs } from './interface/inputs';
 import { Component } from '@serverless/core';
-import { Scf, TriggerManager } from 'tencent-component-toolkit';
-import { ScfDeployInputs } from 'tencent-component-toolkit/lib/modules/scf/interface';
+import { Scf as Faas, TriggerManager } from 'tencent-component-toolkit';
+import { ScfDeployInputs as FaasDeployInputs } from 'tencent-component-toolkit/lib/modules/scf/interface';
 import { ApiError } from 'tencent-component-toolkit/lib/utils/error';
 import { formatInputs } from './formatter';
 import {
   State,
   Inputs,
   Outputs,
-  ScfOutput,
+  FaasOutput,
   TriggerOutput,
   Credentials,
   InvokeParameters,
@@ -41,9 +41,9 @@ export class ServerlessComponent extends Component<State> {
     return this.credentials.tencent.tmpSecrets.appId;
   }
 
-  getFunctionTriggers(functionsList: ScfOutput[], triggersList: any[]): ScfOutput[] {
+  getFunctionTriggers(functionsList: FaasOutput[], triggersList: any[]): FaasOutput[] {
     return functionsList.map(
-      (item): ScfOutput => {
+      (item): FaasOutput => {
         for (const cur of triggersList) {
           if (cur.name === item.name) {
             item.triggers = cur.triggers;
@@ -55,14 +55,32 @@ export class ServerlessComponent extends Component<State> {
     );
   }
 
-  async bulkDeployFaas(region: string, scfInputsList: FaasInputs[]): Promise<ScfOutput[]> {
+  /**
+   * 批量部署函数
+   * @param region 地区
+   * @param faasInputsList SCF 配置参数列表
+   * @returns 函数
+   */
+  async bulkDeployFaas({
+    region,
+    functions: faasList,
+    isAutoPublish = false,
+    publishDescription = CONFIGS.publishDescription,
+  }: {
+    region: string;
+    functions: FaasInputs[];
+    isAutoPublish?: boolean;
+    publishDescription?: string;
+  }): Promise<FaasOutput[]> {
     const credentials = this.getCredentials();
-    const scf = new Scf(credentials, region);
+    const faas = new Faas(credentials, region);
 
-    const outputs: ScfOutput[] = [];
-    for (const item of scfInputsList) {
-      const res = await scf.deploy(item as ScfDeployInputs);
-      outputs.push({
+    const outputs: FaasOutput[] = [];
+    for (const item of faasList) {
+      const res = await faas.deploy(item as FaasDeployInputs);
+
+      const output: FaasOutput = {
+        key: item.key,
         region,
         type: res.Type,
         name: res.FunctionName,
@@ -71,7 +89,18 @@ export class ServerlessComponent extends Component<State> {
         runtime: res.Runtime,
         handler: res.Handler,
         memorySize: res.MemorySize,
-      });
+      };
+      // 发布版本
+      if (isAutoPublish) {
+        const publishRes = await faas.version.publish({
+          functionName: res.FunctionName,
+          namespace: res.Namespace,
+          description: publishDescription,
+        });
+        const version = publishRes.FunctionVersion;
+        output.latestVersion = version;
+      }
+      outputs.push(output);
     }
     return outputs;
   }
@@ -84,7 +113,7 @@ export class ServerlessComponent extends Component<State> {
     const { function: commandFunctionKey } = inputs;
 
     // 格式化 yaml 配置
-    const { region, scfInputsList, triggerInputsList } = await formatInputs({
+    const { region, faasInputsList, triggerInputsList } = await formatInputs({
       inputs,
       appId,
       credentials,
@@ -101,7 +130,12 @@ export class ServerlessComponent extends Component<State> {
     };
 
     // 部署函数
-    const functions = await this.bulkDeployFaas(region, scfInputsList);
+    const functions = await this.bulkDeployFaas({
+      region,
+      functions: faasInputsList,
+      isAutoPublish: inputs.isAutoPublish,
+      publishDescription: inputs.publishDescription,
+    });
     outputs.functions = deepClone(functions);
 
     // 部署触发器
@@ -119,7 +153,7 @@ export class ServerlessComponent extends Component<State> {
     if (commandFunctionKey) {
       // 如果传入指定函数名称，则需要查找已经存在的函数和触发器状态
       // 如果是存在的函数，则修改状态，如果不存在，则添加到 state.functions 数组中
-      const stateFunctions = mergeArray<ScfOutput>({
+      const stateFunctions = mergeArray<FaasOutput>({
         arr1: functions,
         arr2: this.state.functions || [],
         compareKey: 'name',
@@ -149,7 +183,7 @@ export class ServerlessComponent extends Component<State> {
 
     const { region } = this.state;
     const { functions = [], apigws: stateApigws } = this.state;
-    const scf = new Scf(credentials, region);
+    const faas = new Faas(credentials, region);
 
     // 删除函数
     let isFunctionExist = false;
@@ -162,7 +196,7 @@ export class ServerlessComponent extends Component<State> {
         });
         apigwNeedRemove = apigwNeedRemove.concat(apigwList);
 
-        return scf.remove({
+        return faas.remove({
           ...item,
           functionName: item.name,
           isAutoRelease: false,
@@ -251,10 +285,10 @@ export class ServerlessComponent extends Component<State> {
       invokeParams.logType = logTypeMap.tail;
     }
 
-    const scf = new Scf(credentials, region);
+    const faas = new Faas(credentials, region);
 
     console.log(`正在执行函数 ${invokeParams.functionName}`);
-    return scf.invoke(invokeParams);
+    return faas.invoke(invokeParams);
   }
 
   /**
@@ -272,9 +306,9 @@ export class ServerlessComponent extends Component<State> {
     region = region || CONFIGS.region;
 
     console.log(`正在获取函数 ${commandFunctionName} 日志`);
-    const scf = new Scf(credentials, region);
+    const faas = new Faas(credentials, region);
 
-    return scf.logs({
+    return faas.logs({
       functionName: commandFunctionName,
       namespace: namespace,
       qualifier: qualifier,

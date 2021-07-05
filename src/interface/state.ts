@@ -1,5 +1,5 @@
 import { SimpleApigwDetail } from 'tencent-component-toolkit/lib/modules/triggers/interface/index';
-import { ScfOutput, TriggerOutput } from './outputs';
+import { FaasOutput, TriggerOutput } from './outputs';
 
 export interface ApigwState {
   serviceId: string;
@@ -10,7 +10,7 @@ export interface ApigwState {
 
 export type State = {
   region?: string;
-  functions?: ScfOutput[];
+  functions?: FaasOutput[];
 
   triggers?: TriggerOutput[];
 

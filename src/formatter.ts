@@ -34,13 +34,13 @@ async function uploadCodeToCos({
   credentials,
   appId,
   inputs,
-  scfInputsList,
+  faasInputsList,
 }: {
   instance: ComponentInstance;
   credentials: Credentials;
   appId: string;
   inputs: Inputs;
-  scfInputsList: FaasInputs[];
+  faasInputsList: FaasInputs[];
 }): Promise<FaasInputs[]> {
   const region = inputs.region || CONFIGS.region;
   const { srcOriginal } = inputs;
@@ -128,11 +128,11 @@ async function uploadCodeToCos({
       object: defaultObjectName,
     };
   }
-  for (let i = 0; i < scfInputsList.length; i++) {
-    const curScf = scfInputsList[i];
+  for (let i = 0; i < faasInputsList.length; i++) {
+    const curScf = faasInputsList[i];
     if (!curScf.image) {
       const code = await uploadFaasCode(curScf);
-      scfInputsList[i].code = code;
+      faasInputsList[i].code = code;
     } else {
       // 镜像类型不需要上传代码
       const {
@@ -144,7 +144,7 @@ async function uploadCodeToCos({
       } = curScf.image;
       // 企业版需要配置 registryId (实例 ID)
       if (registryId) {
-        scfInputsList[i].imageConfig = {
+        faasInputsList[i].imageConfig = {
           imageType,
           imageUri: imageUrl,
           registryId,
@@ -152,7 +152,7 @@ async function uploadCodeToCos({
           args: imageArgs,
         };
       } else {
-        scfInputsList[i].imageConfig = {
+        faasInputsList[i].imageConfig = {
           imageType,
           imageUri: imageUrl,
           command: imageCommand,
@@ -162,7 +162,7 @@ async function uploadCodeToCos({
     }
   }
 
-  return scfInputsList;
+  return faasInputsList;
 }
 
 function getApigwState(name: string, instance: ComponentInstance): ApigwState {
@@ -313,40 +313,41 @@ export const formatInputs = async ({
   });
   delete commonInputs.src;
 
-  let scfInputsList: FaasInputs[] = [];
+  let faasInputsList: FaasInputs[] = [];
   const { functions } = inputs;
 
   let isFunctionExist = false;
 
   const faasKeyMap: FaasKeyMap = {};
   Object.entries(functions).forEach(([key, func]) => {
-    const scfInputs = formatFaasInputs({
+    const curInputs = formatFaasInputs({
       inputs: {
         ...commonInputs,
         ...func,
       },
     });
+    curInputs.key = key;
 
     const formatedName = formatScfName({ instance, functionKey: key });
     // 如果指定了函数名称，则过滤
     if (commandFunctionKey) {
       if (key === commandFunctionKey) {
-        scfInputs.name = scfInputs.name || formatedName;
-        scfInputsList.push(scfInputs);
+        curInputs.name = curInputs.name || formatedName;
+        faasInputsList.push(curInputs);
         isFunctionExist = true;
       }
     } else {
-      scfInputs.name = scfInputs.name || formatedName;
-      scfInputsList.push(scfInputs);
+      curInputs.name = curInputs.name || formatedName;
+      faasInputsList.push(curInputs);
     }
     faasKeyMap[key] = {
-      name: scfInputs.name!,
-      type: scfInputs.type,
-      namespace: scfInputs.namespace,
+      name: curInputs.name!,
+      type: curInputs.type,
+      namespace: curInputs.namespace,
     };
   });
 
-  scfInputsList = await uploadCodeToCos({ instance, credentials, appId, inputs, scfInputsList });
+  faasInputsList = await uploadCodeToCos({ instance, credentials, appId, inputs, faasInputsList });
 
   // 如果指定了函数，但是没法找到，就报错
   if (commandFunctionKey && !isFunctionExist) {
@@ -368,7 +369,7 @@ export const formatInputs = async ({
 
   return {
     region,
-    scfInputsList,
+    faasInputsList,
     triggerInputsList,
   };
 };

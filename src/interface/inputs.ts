@@ -82,6 +82,7 @@ export interface FaasBaseConfig {
 }
 
 export interface FaasInputs extends FaasBaseConfig {
+  key?: string;
   name?: string;
   src?: string;
   code?: {
@@ -198,6 +199,11 @@ export interface Inputs extends FaasBaseConfig {
 
   // 命令行传入指定函数名称
   function?: string;
+
+  // 是否自动发版
+  isAutoPublish?: boolean;
+  // 发布版本的描述信息
+  publishDescription?: string;
 }
 
 export interface InvokeParameters {

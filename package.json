@@ -8,6 +8,7 @@
   "scripts": {
     "bootstrap": "ts-node ./scripts/bootstrap.ts",
     "test": "jest",
+    "build": "tsc -p .",
     "deploy": "ts-node ./scripts/deploy.ts",
     "change:version": "ts-node ./scripts/version.ts",
     "example": "ts-node ./scripts/example.ts",
