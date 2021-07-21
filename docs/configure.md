@@ -198,6 +198,9 @@ functions:
 | installDependency | 否   | boolean                       | `false` | 是否自动在线安装依赖                                                                                      |
 | eip               | 否   | boolean                       | `false` | 是否[固定出口 IP][固定出口ip]                                                                             |
 | image             | 否   | [Image](#Image)               |         | 镜像配置                                                                                                  |
+| msgTTL            | 否   | number                        | `21600` | 消息保留时间，单位 `秒`                                                                                   |
+| retryNum          | 否   | number                        | `2`     | 重试次数                                                                                                  |
+|  |
 
 **重要字段说明**
 
