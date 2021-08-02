@@ -49,6 +49,15 @@
 $ yarn bootstrap
 ```
 
+后续，还需要在 `.env` 文件写入密钥:
+
+```bash
+TENCENT_SECRET_ID=<secret_id>
+TENCENT_SECRET_KEY=<secret_key>
+```
+
+
+
 ## 组件版本号更新
 
 组件版本维护在项目根目录的 `version.yml` 文件，我们可以通过 `yarn change:version` 命令来更新组件版本。
