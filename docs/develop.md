@@ -62,7 +62,7 @@ $ yarn change:version --type=patch
 如果不带 `--type` 参数，会通过交互方式让选择：
 
 ```bash
-$ yarn change:version
+$ yarn update:version
 yarn run v1.22.10
 $ ts-node ./scripts/version.ts
 ℹ No version is specified
@@ -75,7 +75,7 @@ $ ts-node ./scripts/version.ts
 如果想直接指定版本号：
 
 ```bash
-$ yarn change:version --ver=2.0.0
+$ yarn update:version --ver=2.0.0
 ```
 
 ## 组件发布
