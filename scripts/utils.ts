@@ -18,7 +18,7 @@ export function getComponentConfig(version: string): ComponentConfig {
     version,
     author: 'Tencent Cloud, Inc.',
     org: 'Tencent Cloud, Inc.',
-    description: `Manage multiple SCF on Tencent.`,
+    description: `多函数开发组件，允许用户一次开发并部署多个腾讯 SCF 函数实例，适合进行复杂任务开发的场景，如： 资源的增删改查功能。`,
     keywords: `tencent, serverless, multi-scf, scf`,
     repo: `https://github.com/serverless-components/tencent-${COMPONENT_NAME}`,
     readme: `https://github.com/serverless-components/tencent-${COMPONENT_NAME}/tree/master/README.md`,
