@@ -49,10 +49,10 @@ async function uploadCodeToCos({
   const tempSrc = (getType(srcOriginal) === 'Object'
     ? srcOriginal
     : getType(srcOriginal) === 'String'
-    ? {
+      ? {
         src: srcOriginal,
       }
-    : {}) as SrcObject;
+      : {}) as SrcObject;
 
   // 如果没配置 bucket，使用默认 bucket，默认名称复用老的逻辑
   const bucketName = tempSrc!.bucket
@@ -76,7 +76,8 @@ async function uploadCodeToCos({
   const defaultObjectName = getDefultObjectName(instance);
 
   async function uploadFaasCode(faasConfig: FaasInputs) {
-    const scfCodeSrc = faasConfig.src?.replace('./', '');
+    let _a;
+    const scfCodeSrc = (_a = faasConfig.src) === null || _a === void 0 ? void 0 : _a.replace('./', '');
     const zipFile = inputs.src as string;
     if (scfCodeSrc) {
       const scfObjectName = `${faasConfig.name}-${randomId()}-${getTimestamp()}.zip`;
@@ -206,6 +207,7 @@ export function formatTriggerInputs({
   // 格式化触发器参数，输入底层依赖 SDK
   const triggersInputsList: TriggerInputs[] = [];
   triggers.forEach((item: TriggerInputs) => {
+    let _a;
     item.namespace = namespace;
     let isNeeded = commandFunctionKey ? false : true;
     if (item.type === 'apigw') {
@@ -218,12 +220,16 @@ export function formatTriggerInputs({
       // 定制化需求：是否在 yaml 文件中配置了 apigw 触发器的 serviceId
       item.parameters.isInputServiceId = !!item.parameters.id;
 
-      const apiList = item.parameters.apis?.filter((api) => {
+      const apiList = (_a = item.parameters.apis) === null || _a === void 0 ? void 0 : _a.filter((api) => {
         const functionKey = api.function as string;
+        const func = faasKeyMap[functionKey];
+        if (!func) {
+          throw new Error(`Function ${functionKey} not in deploy list`);
+        }
         api.function = {
-          name: faasKeyMap[functionKey].name,
-          type: faasKeyMap[functionKey].type,
-          functionName: faasKeyMap[functionKey].name,
+          name: func.name,
+          type: func.type,
+          functionName: func.name,
           functionNamespace: namespace,
           functionQualifier: item.parameters.qualifier,
         };
@@ -252,10 +258,14 @@ export function formatTriggerInputs({
       } else {
         isNeeded = true;
       }
+      const func = faasKeyMap[functionKey];
+      if (!func) {
+        throw new Error(`Function ${functionKey} not in deploy list`);
+      }
       item.function = {
-        name: faasKeyMap[functionKey].name,
-        type: faasKeyMap[functionKey].type,
-        namespace: faasKeyMap[functionKey].namespace,
+        name: func.name,
+        type: func.type,
+        namespace: func.namespace,
       };
     }
 
@@ -319,13 +329,22 @@ export const formatInputs = async ({
   let isFunctionExist = false;
 
   const faasKeyMap: FaasKeyMap = {};
-  Object.entries(functions).forEach(([key, func]) => {
-    const curInputs = formatFaasInputs({
-      inputs: {
-        ...commonInputs,
-        ...func,
-      },
+  const functionList = [];
+  if (Array.isArray(functions)) {
+    functionList.push(...functions);
+  }
+  else {
+    Object.entries(functions).forEach(([key, func]) => {
+      func.key = key;
+      functionList.push(func);
     });
+  }
+  for (const func of functionList) {
+    const { key } = func;
+    const curInputs = formatFaasInputs({
+      inputs: Object.assign(Object.assign({}, commonInputs), func),
+    });
+
     curInputs.key = key;
 
     const formatedName = formatScfName({ instance, functionKey: key });
@@ -340,12 +359,12 @@ export const formatInputs = async ({
       curInputs.name = curInputs.name || formatedName;
       faasInputsList.push(curInputs);
     }
-    faasKeyMap[key] = {
+    faasKeyMap[key !== null && key !== void 0 ? key : curInputs.name] = {
       name: curInputs.name!,
       type: curInputs.type,
       namespace: curInputs.namespace,
     };
-  });
+  }
 
   faasInputsList = await uploadCodeToCos({ instance, credentials, appId, inputs, faasInputsList });
 
