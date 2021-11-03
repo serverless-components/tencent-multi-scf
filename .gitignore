@@ -26,3 +26,4 @@ test/src/node_modules
 test/src/.next
 test/src/package-lock.json
 __pycache__
+.history
