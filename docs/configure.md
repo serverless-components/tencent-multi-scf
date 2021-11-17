@@ -55,7 +55,6 @@ inputs:
     - type: cos
       function: index
       parameters:
-        name: cos1
         bucket: bucket-name
         filter:
           prefix: filterdir/
@@ -64,7 +63,10 @@ inputs:
         enable: true
     - type: apigw
       parameters:
-        name: serverless
+        serviceName: serverless
+        protocols:
+          - https
+          - http
         id: service-xxx # 如果不配置，会自动创建
         apis:
           - path: /
@@ -330,7 +332,7 @@ mps - MPS 触发器
 | 参数名称       | 必选 |  类型   |   默认值   | 描述                                             |
 | -------------- | :--: | :-----: | :--------: | :----------------------------------------------- |
 | name           |  是  | string  |            | 触发器名称                                       |
-| cronExpression |  是  | number  |            | 触发时间，为 [Cron][定时触发器-cron表达式]表达式 |
+| cronExpression |  是  | string  |            | 触发时间，为 [Cron][定时触发器-cron表达式]表达式 |
 | qualifier      |  否  | string  | `$DEFAULT` | 触发版本，默认为 `$DEFAULT`，即 `默认流量`       |
 | argument       |  否  | object  |            | 入参参数。                                       |
 | enable         |  否  | boolean |  `false`   | 触发器是否启用                                   |
@@ -342,7 +344,7 @@ mps - MPS 触发器
 | 参数名称  | 必选 |           类型           |   默认值   | 描述                                               |
 | --------- | :--: | :----------------------: | :--------: | :------------------------------------------------- |
 | qualifier |  否  |          string          | `$DEFAULT` | 触发版本，默认为 `$DEFAULT`，即 `默认流量`         |
-| bucket    |  是  |          string          |            | 配置的 COS Bucket，仅支持选择同地域下的 COS 存储桶 |
+| bucket    |  是  |          string          |            | 配置对应COS存储桶适用于XML API的访问域名，仅支持选择同地域下的 COS 存储桶 |
 | filter    |  是  | [CosFilter][cos过滤规则] |            | COS 文件名的过滤规则                               |
 | events    |  是  |          string          |            | [COS 的事件类型][cos事件类型]                      |
 | enable    |  否  |         boolean          |  `false`   | 触发器是否启用                                     |
@@ -376,15 +378,15 @@ mps - MPS 触发器
 
 #### API 网关触发器
 
-| 参数名称    | 必选 |   类型   | 默认值      | 描述                                                                           |
-| ----------- | ---- | :------: | :---------- | :----------------------------------------------------------------------------- |
-| environment | 否   |  string  | `release`   | 发布的环境，填写 `release`、`test` 或 `prepub`，不填写默认为`release`          |
-| serviceId   | 否   |  string  |             | 网关 Service ID（不传入则新建一个 Service）                                    |
-| protocols   | 否   | string[] | `['http']`  | 前端请求的类型，如 http，https，http 与 https                                  |
-| netTypes    | 否   | string[] | `['OUTER']` | 网络类型，如 `['OUTER']`, `['INNER']` 与`['OUTER', 'INNER']`                   |
+| 参数名称    | 必选 |   类型   | 默认值      | 描述                                                         |
+| ----------- | ---- | :------: | :---------- | :----------------------------------------------------------- |
+| environment | 否   |  string  | `release`   | 发布的环境，填写 `release`、`test` 或 `prepub`，不填写默认为`release` |
+| id          | 否   |  string  |             | 网关 Service ID（不传入则新建一个 Service）                  |
+| protocols   | 否   | string[] | `['http']`  | 前端请求的类型，如 http，https，http 与 https                |
+| netTypes    | 否   | string[] | `['OUTER']` | 网络类型，如 `['OUTER']`, `['INNER']` 与`['OUTER', 'INNER']` |
 | serviceName | 否   |  string  |             | 网关 API 名称。如果不传递则默认新建一个名称与触发器名称相同的 Apigw API 名称。 |
-| description | 否   |  string  |             | 网关 API 描述                                                                  |
-| endpoints   | 是   | object[] |             | 参考 [endpoint](#endpoints-参数) 参数。                                        |
+| description | 否   |  string  |             | 网关 API 描述                                                |
+| apis        | 是   | object[] |             | 参考 [endpoint](#endpoints-参数) 参数。                      |
 
 > 注意：如果配置多个 API 网关触发器，需要配置不同的 `serviceName`
 
@@ -399,9 +401,9 @@ mps - MPS 触发器
 | apiId                     | 否   |           string            |         | API ID。如果不传递则根据 path 和 method 创建一个，传递了直接忽略 path 和 method 参数。                    |
 | apiName                   | 否   |           string            |         | API 名称                                                                                                  |
 | description               | 否   |           string            |         | API 描述                                                                                                  |
-| enableCORS                | 是   |           boolean           | `false` | 是否需要开启跨域                                                                                          |
+| enableCORS                | 否   |           boolean           | `false` | 是否需要开启跨域                                                                                          |
 | responseType              | 否   |           string            |         | 自定义响应配置返回类型，现在只支持 HTML、JSON、TEST、BINARY、XML（此配置仅用于生成 API 文档提示调用者）。 |
-| serviceTimeout            | 是   |           number            | `15`    | API 的后端服务超时时间，单位是秒。                                                                        |
+| serviceTimeout            | 否   |           number            | `15`    | API 的后端服务超时时间，单位是秒。                                                                        |
 | param                     | 否   |   [Parameter](#Parameter)   |         | 前端参数                                                                                                  |
 | function                  | 否   |    [Function](#Function)    |         | SCF 配置                                                                                                  |
 | usagePlan                 | 否   |   [UsagePlan](#UsagePlan)   |         | 使用计划                                                                                                  |

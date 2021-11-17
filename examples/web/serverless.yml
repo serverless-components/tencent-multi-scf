@@ -25,7 +25,7 @@ inputs:
   triggers:
     - type: apigw
       parameters:
-        name: serverless
+        serviceName: serverless
         protocols:
           - https
           - http
