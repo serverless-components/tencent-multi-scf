@@ -34,7 +34,7 @@ inputs:
         argument: argument # 额外的参数
     - type: apigw
       parameters:
-        name: serverless
+        serviceName: serverless
         protocols:
           - https
           - http
