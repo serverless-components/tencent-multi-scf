@@ -84,6 +84,7 @@ actions:
       timeout:
         type: number
         min: 1
+        message: 'timeout 取值范围为 [1, 900]'
         level: 'warning'
       ignoreTriggers:
         type: boolean
