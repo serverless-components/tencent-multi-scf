@@ -12,7 +12,11 @@ export const typeOf = (obj: any) => {
 };
 
 export function getComponentConfig(version: string): ComponentConfig {
+  const componentYaml = join(__dirname, '../component.yml');
+  const content = readFileSync(componentYaml, 'utf-8');
+  const config = YAML.load(content) as ComponentConfig;
   return {
+    ...config,
     type: 'component',
     name: COMPONENT_NAME,
     version,
@@ -25,29 +29,6 @@ export function getComponentConfig(version: string): ComponentConfig {
     license: 'MIT',
     webDeployable: true,
     src: COMPONENT_CODE_PATH,
-    actions: {
-      deploy: {
-        definition: 'Deploy',
-        inputs: {
-          src: {
-            type: 'src',
-            required: true,
-            description: 'Code path',
-          },
-          region: {
-            type: 'string',
-            required: false,
-            description: '函数所在区域',
-          },
-        },
-      },
-      remove: {
-        definition: 'Remove',
-      },
-      get_state: {
-        definition: 'Get instance state',
-      },
-    },
   };
 }
 

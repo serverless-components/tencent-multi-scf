@@ -1,5 +1,4 @@
-name: multi-scf
-version: 0.3.11
+type: component
 author: Tencent Cloud, Inc.
 org: Tencent Cloud, Inc.
 description: 多函数组件，允许用户开发部署多个腾讯 SCF 函数实例，适合进行多个函数开发的场景，如： 资源的增删改查功能。
@@ -7,7 +6,6 @@ keywords: tencent, serverless, multi-scf
 repo: https://github.com/serverless-components/tencent-multi-scf
 readme: https://github.com/serverless-components/tencent-multi-scf/tree/master/README.md
 license: MIT
-main: ./build
 
 actions:
   deploy:
