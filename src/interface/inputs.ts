@@ -24,6 +24,11 @@ export interface FaasBaseConfig {
   timeout?: number;
   // 描述
   description?: string;
+  // 资源类型，支持'CPU'和'GPU'
+  nodeType?: string;
+  // 资源规格，仅GPU类型可配置
+  nodeSpec?: string;
+  // 函数环境变量
   environments?: KeyValue[];
 
   // 环境变量，兼容老的结构 { variables: { [key: string]: string } }
@@ -96,6 +101,10 @@ export interface FaasInputs extends FaasBaseConfig {
     args?: string;
   };
   handler: string;
+  // 资源类型，支持'CPU'和'GPU'
+  nodeType?: string;
+  // 资源规格，仅GPU类型可配置
+  nodeSpec?: string;
 
   // 镜像配置
   image?: {

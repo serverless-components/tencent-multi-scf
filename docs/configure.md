@@ -38,6 +38,8 @@ inputs:
       timeout: 10
     user-detail:
       type: web
+      nodeType: CPU # 资源类型, 可选GPU/CPU
+      nodeSpec: "" # 资源配置, nodeType为GPU需配置
       image: # 镜像配置
         registryId: tcr-xxx # 容器镜像服务实例 ID，企业版必须
         imageUrl: abc.com:latest@sha256:xxx # 镜像版本 URL
@@ -177,32 +179,34 @@ functions:
 
 `Function` 对象支持配置属性如下：
 
-| 参数名称          | 必选 | 类型                          | 默认值  | 描述                                                                                                      |
-| ----------------- | ---- | ----------------------------- | ------- | --------------------------------------------------------------------------------------------------------- |
-| handler           | 否   | string                        |         | 处理方法名称                                                                                              |
-| type              | 否   | string                        | `event` | 函数类型，支持：event、web                                                                                |
-| name              | 否   | string                        |         | 函数名称                                                                                                  |
-| src               | 否   | string                        |         | 代码目录，相对于 [Src](#Src) 指定目录                                                                     |
-| role              | 否   | string                        |         | 运行角色。                                                                                                |
-| description       | 否   | string                        |         | 描述                                                                                                      |
-| memorySize        | 否   | number                        | `128`   | 运行内存，单位 `MB`，范围 64、128-3072，以 128 为阶梯                                                     |
-| timeout           | 否   | number                        | `3`     | 超时时间，单位为秒，可选值范围 1-900 秒                                                                   |
-| environments      | 否   | [Environment](#Environment)[] |         | 环境变量                                                                                                  |
-| vpc               | 否   | [Vpc](#Vpc)                   |         | 私有网络配置                                                                                              |
-| layers            | 否   | [Layer](#Layer)[]             |         | 层                                                                                                        |
-| cls               | 否   | [Cls](#Cls)                   |         | CLS 日志配置                                                                                              |
-| tags              | 否   | [Tag](#Tag)[]                 |         | 标签设置                                                                                                  |
-| cfs               | 否   | [Cfs](#Cfs)[]                 |         | 文件系统挂载配置，用于云函数挂载文件系统。                                                                |
-| publicAccess      | 否   | number                        | `true`  | 是否开启公网访问                                                                                          |
-| eip               | 否   | boolean                       | `false` | 固定出口 IP。默认为 false，即不启用。                                                                     |
-| asyncRunEnable    | 否   | boolean                       | `false` | 是否启用异步执行，默认最大支持 `12小时`，配置为 `true` 时，`cls` 配置必须。`此参数只有在函数创建时才有效` |
-| traceEnable       | 否   | boolean                       | `false` | 是否启用状态追踪，如果要配置为 `true`，必须配置 `asyncRunEnable` 为 `true`                                |
-| installDependency | 否   | boolean                       | `false` | 是否自动在线安装依赖                                                                                      |
-| eip               | 否   | boolean                       | `false` | 是否[固定出口 IP][固定出口ip]                                                                             |
-| image             | 否   | [Image](#Image)               |         | 镜像配置                                                                                                  |
-| msgTTL            | 否   | number                        | `21600` | 消息保留时间，单位 `秒`                                                                                   |
-| retryNum          | 否   | number                        | `2`     | 重试次数                                                                                                  |
-|  |
+| 参数名称              | 必选 | 类型                          | 默认值     | 描述                                                                                                                                 |
+|-------------------| ---- | ----------------------------- |---------|------------------------------------------------------------------------------------------------------------------------------------|
+| handler           | 否   | string                        |         | 处理方法名称                                                                                                                             |
+| type              | 否   | string                        | `event` | 函数类型，支持：event、web                                                                                                                  |
+| nodeType          | 否   | string                        | `CPU`   | 资源类型，支持：GPU、CPU，当nodeType=GPU时，必须指定image镜像配置                                                                                       |
+| nodeSpec          | 否   | string                        |         | GPU资源配置，支持：计算型GN7(GN7.LARGE20,GN7.2XLARGE40,GN7.5XLARGE80),渲染型GN7vw(GN7vw.LARGE16,GN7vw.2XLARGE32,GN7vw.2XLARGE32,GN7vw.4XLARGE64) |
+| name              | 否   | string                        |         | 函数名称                                                                                                                               |
+| src               | 否   | string                        |         | 代码目录，相对于 [Src](#Src) 指定目录                                                                                                          |
+| role              | 否   | string                        |         | 运行角色。                                                                                                                              |
+| description       | 否   | string                        |         | 描述                                                                                                                                 |
+| memorySize        | 否   | number                        | `128`   | 运行内存，单位 `MB`，范围 64、128-3072，以 128 为阶梯                                                                                              |
+| timeout           | 否   | number                        | `3`     | 超时时间，单位为秒，可选值范围 1-900 秒                                                                                                            |
+| environments      | 否   | [Environment](#Environment)[] |         | 环境变量                                                                                                                               |
+| vpc               | 否   | [Vpc](#Vpc)                   |         | 私有网络配置                                                                                                                             |
+| layers            | 否   | [Layer](#Layer)[]             |         | 层                                                                                                                                  |
+| cls               | 否   | [Cls](#Cls)                   |         | CLS 日志配置                                                                                                                           |
+| tags              | 否   | [Tag](#Tag)[]                 |         | 标签设置                                                                                                                               |
+| cfs               | 否   | [Cfs](#Cfs)[]                 |         | 文件系统挂载配置，用于云函数挂载文件系统。                                                                                                              |
+| publicAccess      | 否   | number                        | `true`  | 是否开启公网访问                                                                                                                           |
+| eip               | 否   | boolean                       | `false` | 固定出口 IP。默认为 false，即不启用。                                                                                                            |
+| asyncRunEnable    | 否   | boolean                       | `false` | 是否启用异步执行，默认最大支持 `12小时`，配置为 `true` 时，`cls` 配置必须。`此参数只有在函数创建时才有效`                                                                    |
+| traceEnable       | 否   | boolean                       | `false` | 是否启用状态追踪，如果要配置为 `true`，必须配置 `asyncRunEnable` 为 `true`                                                                              |
+| installDependency | 否   | boolean                       | `false` | 是否自动在线安装依赖                                                                                                                         |
+| eip               | 否   | boolean                       | `false` | 是否[固定出口 IP][固定出口ip]                                                                                                                |
+| image             | 否   | [Image](#Image)               |         | 镜像配置                                                                                                                               |
+| msgTTL            | 否   | number                        | `21600` | 消息保留时间，单位 `秒`                                                                                                                      |
+| retryNum          | 否   | number                        | `2`     | 重试次数                                                                                                                               |
+|                   |
 
 **重要字段说明**
 
