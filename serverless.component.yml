@@ -94,3 +94,5 @@ actions:
         type: boolean
       publishDescription:
         type: string
+  remove:
+    definition: Remove your multi SCF application
