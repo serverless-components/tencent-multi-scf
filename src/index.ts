@@ -139,7 +139,7 @@ export class ServerlessComponent extends Component<State> {
     outputs.functions = deepClone(functions);
 
     // 部署触发器
-    const { triggerList, apigwList } = await triggerManager.bulkCreateTriggers(triggerInputsList);
+    const { triggerList, apigwList } = await triggerManager.bulkCreateTriggers(triggerInputsList, inputs.namespace);
     outputs.triggers = triggerList;
 
     this.state = {
