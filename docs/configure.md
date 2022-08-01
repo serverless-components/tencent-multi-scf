@@ -409,7 +409,7 @@ mps - MPS 触发器
 | responseType              | 否   |           string            |         | 自定义响应配置返回类型，现在只支持 HTML、JSON、TEST、BINARY、XML（此配置仅用于生成 API 文档提示调用者）。 |
 | serviceTimeout            | 否   |           number            | `15`    | API 的后端服务超时时间，单位是秒。                                                                        |
 | param                     | 否   |   [Parameter](#Parameter)   |         | 前端参数                                                                                                  |
-| function                  | 否   |    [Function](#Function)    |         | SCF 配置                                                                                                  |
+| function                  | 否   |           string            |         | SCF 函数名                                                                                                  |
 | usagePlan                 | 否   |   [UsagePlan](#UsagePlan)   |         | 使用计划                                                                                                  |
 | auth                      | 否   |        [Auth](#Auth)        |         | API 密钥配置                                                                                              |
 | isBase64Encoded           | 否   |           boolean           | `false` | 是否开启 Base64 编码，只有后端为 scf 时才会生效                                                           |
@@ -428,15 +428,6 @@ mps - MPS 触发器
 | type         | 否   | string  |        | API 的前端参数类型，如 string、Int 等。                   |
 | defaultValue | 否   | string  |        | API 的前端参数默认值。                                    |
 | desc         | 否   | string  |        | API 的前端参数备注。                                      |
-
-###### Function
-
-SCF 配置
-
-| 参数名称             | 必选 | 类型    | 默认值     | 描述                     |
-| -------------------- | ---- | ------- | ---------- | ------------------------ |
-| isIntegratedResponse | 否   | boolean | `false`    | 是否启用 SCF 集成响应。  |
-| functionQualifier    | 否   | string  | `$DEFAULT` | 触发器关联的 SCF 版本 。 |
 
 ###### UsagePlan
 
